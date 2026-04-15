@@ -2,6 +2,12 @@ import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { obtenerRutinas } from '../../src/storage';
+import { eliminarRutina } from '../../src/storage';
+import { Alert } from 'react-native'; // arriba del archivo
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
+
+
 
 export default function Home() {
   const router = useRouter();
@@ -12,9 +18,11 @@ export default function Home() {
     setRutinas(data);
   };
 
-  useEffect(() => {
-    cargarRutinas();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      cargarRutinas();
+    }, [])
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f5f5f5', padding: 20, paddingTop: 70 }}>
@@ -27,20 +35,46 @@ export default function Home() {
         data={rutinas}
         keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
-            <TouchableOpacity
-              onPress={() => router.push(`/rutina/${index}`)}
-              style={{
-                backgroundColor: '#fff',
-                padding: 15,
-                borderRadius: 12,
-                marginBottom: 10
-              }}
-            >
+            <View style={{
+              backgroundColor: '#fff',
+              padding: 15,
+              borderRadius: 12,
+              marginBottom: 10,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+    
+            <TouchableOpacity onPress={() => router.push(`/rutina/${index}`)}>
               <Text style={{ fontSize: 18, fontWeight: '600' }}>
                 {item.nombre}
               </Text>
             </TouchableOpacity>
-)}
+
+            <TouchableOpacity
+            
+            onPress={() => {
+              Alert.alert(
+                "Eliminar rutina",
+                "¿Seguro que querés borrarla?",
+                [
+                  { text: "Cancelar" },
+                  {
+                    text: "Eliminar",
+                    onPress: async () => {
+                      await eliminarRutina(index);
+                      cargarRutinas();
+                    }
+                  }
+                ]
+              );
+            }}
+           >
+              <Text style={{ color: 'red', fontWeight: 'bold' }}>X</Text>
+            </TouchableOpacity>
+
+          </View>
+        )}
       />
 
       {/* Botón flotante */}
