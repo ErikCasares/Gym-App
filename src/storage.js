@@ -21,6 +21,15 @@ export const obtenerRutinas = async () => {
   }
 };
 
+export const eliminarRutina = async (index) => {
+  const data = await AsyncStorage.getItem(KEY);
+  const rutinas = data ? JSON.parse(data) : [];
+
+  rutinas.splice(index, 1);
+
+  await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
+};
+
 export const agregarEjercicio = async (rutinaIndex, ejercicio) => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
