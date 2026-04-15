@@ -17,7 +17,7 @@ export default function Home() {
   }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f5f5f5', padding: 20 }}>
+    <View style={{ flex: 1, backgroundColor: '#f5f5f5', padding: 20, paddingTop: 70 }}>
       
       <Text style={{ fontSize: 28, fontWeight: 'bold', marginBottom: 20 }}>
         💪 Mis Rutinas
@@ -26,22 +26,21 @@ export default function Home() {
       <FlatList
         data={rutinas}
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={{
-            backgroundColor: '#fff',
-            padding: 15,
-            borderRadius: 12,
-            marginBottom: 10,
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 5,
-            elevation: 3
-          }}>
-            <Text style={{ fontSize: 18, fontWeight: '600' }}>
-              {item.nombre}
-            </Text>
-          </View>
-        )}
+          renderItem={({ item, index }) => (
+            <TouchableOpacity
+              onPress={() => router.push(`/rutina/${index}`)}
+              style={{
+                backgroundColor: '#fff',
+                padding: 15,
+                borderRadius: 12,
+                marginBottom: 10
+              }}
+            >
+              <Text style={{ fontSize: 18, fontWeight: '600' }}>
+                {item.nombre}
+              </Text>
+            </TouchableOpacity>
+)}
       />
 
       {/* Botón flotante */}
@@ -60,7 +59,7 @@ export default function Home() {
           elevation: 5
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 30 }}>+</Text>
+        <Text style={{ color: '#fff', fontSize: 30}}>+</Text>
       </TouchableOpacity>
     </View>
   );
