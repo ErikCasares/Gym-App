@@ -302,7 +302,7 @@ export default function RutinaDetalle() {
           </View>
 )}
       </View>
-
+ 
     </View>
   );
 }
