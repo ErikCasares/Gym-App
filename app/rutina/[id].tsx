@@ -24,7 +24,7 @@ import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
 // COMPONENTE PRINCIPAL
 // =======================
 export default function RutinaDetalle() {
-
+const [varianteSeleccionada, setVarianteSeleccionada] = useState(null);
   // =======================
   // PARAMETROS Y STATES
   // =======================
@@ -33,7 +33,13 @@ export default function RutinaDetalle() {
   const [mostrarSelector, setMostrarSelector] = useState(false); // mostrar/ocultar selector
   const [rutina, setRutina] = useState(null); // rutina actual
   const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState(null);
+  const formatearEquipo = (equipo) => {
+    if (!equipo || equipo.length === 0) return '';
 
+    if (equipo.includes('sin equipo')) return 'Peso corporal';
+
+    return equipo.join(' + ');
+    };
   const rutinaIndex = Number(id); // convertir id a número
 
   // =======================
@@ -100,20 +106,26 @@ export default function RutinaDetalle() {
   // =======================
   // AGREGAR EJERCICIO
   // =======================
-  const agregar = async () => {
-    if (!ejercicioSeleccionado) return;
+const agregar = async () => {
+  if (!ejercicioSeleccionado || !varianteSeleccionada) return;
 
-    await agregarEjercicio(rutinaIndex, {
-      nombre: ejercicioSeleccionado.nombre,
-      grupo: ejercicioSeleccionado.grupo,
-      series: ejercicioSeleccionado.series.toString(),
-      reps: ejercicioSeleccionado.reps.toString(),
-      completado: false
-    });
+  await agregarEjercicio(rutinaIndex, {
+    nombre: ejercicioSeleccionado.nombre,
+    variante: varianteSeleccionada,
+    grupo: ejercicioSeleccionado.grupo,
+    dificultad: ejercicioSeleccionado.dificultad,
+    equipo: ejercicioSeleccionado.equipo,
+    series: ejercicioSeleccionado.series.toString(),
+    reps: ejercicioSeleccionado.reps.toString(),
+    completado: false
+  });
 
-    setEjercicioSeleccionado(null);
-    cargar(); // recargar rutina
-  };
+  setEjercicioSeleccionado(null);
+  setVarianteSeleccionada(null);
+  setMostrarSelector(false);
+
+  cargar();
+};
 
   // =======================
   // CALCULOS DE PROGRESO
@@ -202,16 +214,24 @@ export default function RutinaDetalle() {
               cargar();
             }}>
               <Text style={{
-                fontSize: 16,
-                textDecorationLine: item.completado ? 'line-through' : 'none'
-              }}>
-                {item.nombre} ({item.series}x{item.reps})
-              </Text>
+                    fontSize: 16,
+                    textDecorationLine: item.completado ? 'line-through' : 'none'
+                }}>
+                    {item.nombre} - {item.variante}
+                </Text>
+
+                <Text style={{ fontSize: 12, color: '#666' }}>
+                    {item.series}x{item.reps} • {item.dificultad}
+                </Text>
+
+                <Text style={{ fontSize: 12, color: '#999' }}>
+                    {formatearEquipo(item.equipo)}
+                </Text>
             </TouchableOpacity>
 
             {/* ELIMINAR */}
             <TouchableOpacity onPress={async () => {
-              await eliminarEjercicio(id, index);
+              await eliminarEjercicio(rutinaIndex, index);
               cargar();
             }}>
               <Text style={{ color: 'red' }}>X</Text>
@@ -225,6 +245,8 @@ export default function RutinaDetalle() {
           SELECTOR DE EJERCICIOS
       ======================= */}
       <View style={{ marginTop: 20 }}>
+        <Text style={{ marginBottom: 10 }}>Seleccionar ejercicio</Text>
+
                     {/* BOTON MOSTRAR SELECTOR */}
             <TouchableOpacity
               onPress={() => setMostrarSelector(!mostrarSelector)}
@@ -240,7 +262,6 @@ export default function RutinaDetalle() {
                 {mostrarSelector ? 'Cerrar' : 'Agregar ejercicio'}
               </Text>
             </TouchableOpacity>
-        <Text style={{ marginBottom: 10 }}>Seleccionar ejercicio</Text>
     {mostrarSelector && (
       <View>
         {/* BUSCADOR */}
@@ -278,26 +299,73 @@ export default function RutinaDetalle() {
             </TouchableOpacity>
           ))}
         </View>
+            {ejercicioSeleccionado && (
+            <View style={{ marginTop: 10 }}>
+                <Text style={{ marginBottom: 5 }}>Variantes:</Text>
 
+                {ejercicioSeleccionado.variantes.map((v, i) => (
+                <TouchableOpacity
+                    key={i}
+                    onPress={() => setVarianteSeleccionada(v)}
+                    style={{
+                    padding: 8,
+                    backgroundColor:
+                        varianteSeleccionada === v ? '#4caf50' : '#eee',
+                    borderRadius: 10,
+                    marginBottom: 5
+                    }}
+                >
+                    <Text>{v}</Text>
+                </TouchableOpacity>
+                ))}
+
+                {/* BOTON AGREGAR (CONFIRMAR) */}
+                <TouchableOpacity
+                  onPress={agregar}
+                  disabled={!varianteSeleccionada}
+                  style={{
+                    marginTop: 10,
+                    padding: 12,
+                    borderRadius: 10,
+                    backgroundColor: varianteSeleccionada ? '#000' : '#ccc',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Text style={{ color: '#fff' }}>Agregar</Text>
+                </TouchableOpacity>
+            </View>
+            )}
         {/* LISTA DE EJERCICIOS DISPONIBLES */}
         {ejerciciosFiltrados.map((e) => (
-          <TouchableOpacity
-            key={e.id}
-            onPress={() => setEjercicioSeleccionado(e)}
-            style={{
-              padding: 10,
-              backgroundColor:
-                ejercicioSeleccionado?.id === e.id ? '#000' : '#fff',
-              borderRadius: 10,
-              marginBottom: 5
-            }}
-          >
-            <Text style={{
-              color: ejercicioSeleccionado?.id === e.id ? '#fff' : '#000'
-            }}>
-              {e.nombre} ({e.grupo})
-            </Text>
-          </TouchableOpacity>
+  <TouchableOpacity
+    key={e.id}
+    onPress={() => {
+      setEjercicioSeleccionado(e);
+      setVarianteSeleccionada(null);
+    }}
+    style={{
+      padding: 10,
+      backgroundColor:
+        ejercicioSeleccionado?.id === e.id ? '#000' : '#fff',
+      borderRadius: 10,
+      marginBottom: 5,
+      marginTop: 5
+    }}
+  >
+    <Text style={{
+      color: ejercicioSeleccionado?.id === e.id ? '#fff' : '#000',
+      fontWeight: '600'
+    }}>
+      {e.nombre}
+    </Text>
+
+    <Text style={{
+      color: ejercicioSeleccionado?.id === e.id ? '#fff' : '#666',
+      fontSize: 12
+    }}>
+      {e.grupo} • {e.dificultad}
+    </Text>
+  </TouchableOpacity>
         ))}
           </View>
 )}
