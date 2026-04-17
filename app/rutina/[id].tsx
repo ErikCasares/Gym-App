@@ -1,12 +1,21 @@
 // =======================
 // IMPORTS
 // =======================
-import {
-  View, Text, FlatList, TextInput, TouchableOpacity
-} from 'react-native';
+import { Stack } from 'expo-router';
 
 import { useLocalSearchParams } from 'expo-router'; // obtener params de la ruta (id)
 import { useEffect, useState, useRef } from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  FlatList,
+  Animated,
+  PanResponder,
+  Pressable
+} from 'react-native';
 
 import {
   obtenerRutinas,
@@ -15,16 +24,52 @@ import {
   eliminarEjercicio
 } from '../../src/storage'; // funciones de storage
 
-import { Animated } from 'react-native'; // animaciones
 import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
 
 
 
 // =======================
-// COMPONENTE PRINCIPAL
+// Componente principal
 // =======================
 export default function RutinaDetalle() {
+const fadeAnim = useRef(new Animated.Value(0)).current;
+const translateY = useRef(new Animated.Value(0)).current;
 const [varianteSeleccionada, setVarianteSeleccionada] = useState(null);
+const headerPanEnabled = useRef(false);
+
+const panResponder = useRef(
+  PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      // Solo activar el pan si el touch empezó en el header
+      return headerPanEnabled.current && gestureState.dy > 10;
+    },
+    onPanResponderMove: (_, gestureState) => {
+      if (gestureState.dy > 0) {
+        translateY.setValue(gestureState.dy);
+      }
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      // reset del flag al soltar
+      headerPanEnabled.current = false;
+      if (gestureState.dy > 120 || gestureState.vy > 1.2) {
+        setMostrarSelector(false);
+        translateY.setValue(0);
+      } else {
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true
+        }).start();
+      }
+    },
+    onPanResponderTerminate: () => {
+      headerPanEnabled.current = false;
+      Animated.spring(translateY, {
+        toValue: 0,
+        useNativeDriver: true
+      }).start();
+    }
+  })
+).current;
   // =======================
   // PARAMETROS Y STATES
   // =======================
@@ -103,6 +148,16 @@ const [varianteSeleccionada, setVarianteSeleccionada] = useState(null);
     }).start();
   }, [progreso]);
 
+  useEffect(() => {
+    if (mostrarSelector) {
+        fadeAnim.setValue(0); // reset
+        Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true
+        }).start();
+    }
+}, [mostrarSelector]);
   // =======================
   // AGREGAR EJERCICIO
   // =======================
@@ -143,7 +198,13 @@ const agregar = async () => {
   // =======================
   // RENDER
   // =======================
-  return (
+  return (<>
+<Stack.Screen
+  options={{
+    title: rutina?.nombre || 'Rutina',
+    headerBackTitle: 'Volver'
+  }}
+/>
     <View style={{ flex: 1, padding: 20, backgroundColor: '#f5f5f5' }}>
       
       {/* TITULO */}
@@ -247,7 +308,7 @@ const agregar = async () => {
       <View style={{ marginTop: 20 }}>
         <Text style={{ marginBottom: 10 }}>Seleccionar ejercicio</Text>
 
-                    {/* BOTON MOSTRAR SELECTOR */}
+                    {/* BOTÓN MOSTRAR SELECTOR */}
             <TouchableOpacity
               onPress={() => setMostrarSelector(!mostrarSelector)}
               style={{
@@ -262,115 +323,158 @@ const agregar = async () => {
                 {mostrarSelector ? 'Cerrar' : 'Agregar ejercicio'}
               </Text>
             </TouchableOpacity>
-    {mostrarSelector && (
-      <View>
-        {/* BUSCADOR */}
-        <TextInput
-          placeholder="Buscar ejercicio..."
-          value={busqueda}
-          onChangeText={setBusqueda}
-          style={{
-            backgroundColor: '#fff',
-            padding: 10,
-            borderRadius: 10,
-            marginTop: 20
-          }}
-        />
+      </View>
+              <Modal
+  visible={mostrarSelector}
+  animationType="slide"
+  transparent={true}
+>
+<Pressable
+  style={{
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end'
+  }}
+  onPress={() => setMostrarSelector(false)}
+>
 
-        {/* FILTRO POR GRUPO */}
-        <View style={{ flexDirection: 'row', marginTop: 10, flexWrap: 'wrap' }}>
-          {grupos.map((g) => (
+    {/* CONTENEDOR */}
+<Pressable onPress={() => {}} style={{ alignSelf: 'stretch' }}>
+  <Animated.View
+    {...panResponder.panHandlers}
+style={{
+  backgroundColor: '#fff',
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
+  padding: 20,
+  maxHeight: '80%',
+  transform: [{ translateY }],
+  marginBottom: 0
+}}
+  >
+  {/* HANDLE */}
+  <View style={{
+    width: 40,
+    height: 5,
+    backgroundColor: '#ccc',
+    borderRadius: 10,
+    alignSelf: 'center',
+    marginBottom: 10
+  }} />
+      {/* HEADER */}
+      <View
+        onStartShouldSetResponder={() => true}
+        onResponderGrant={() => { headerPanEnabled.current = true; }}
+        onResponderRelease={() => { headerPanEnabled.current = false; }}
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+        <Text style={{ fontSize: 18, fontWeight: '600' }}>
+          Seleccionar ejercicio
+        </Text>
+
+        <TouchableOpacity onPress={() => setMostrarSelector(false)}>
+          <Text style={{ fontSize: 18 }}>✖</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* BUSCADOR */}
+      <TextInput
+        placeholder="Buscar ejercicio..."
+        value={busqueda}
+        onChangeText={setBusqueda}
+        style={{
+          backgroundColor: '#f0f0f0',
+          padding: 12,
+          borderRadius: 12,
+          marginTop: 15
+        }}
+      />
+
+      {/* LISTA */}
+      <FlatList
+        data={ejerciciosFiltrados}
+        keyExtractor={(item) => item.id.toString()}
+        showsVerticalScrollIndicator={false}
+        style={{ marginTop: 15 }}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() => {
+              setEjercicioSeleccionado(item);
+              setVarianteSeleccionada(null);
+            }}
+            style={{
+              padding: 12,
+              backgroundColor:
+                ejercicioSeleccionado?.id === item.id ? '#000' : '#fff',
+              borderRadius: 12,
+              marginBottom: 8
+            }}
+          >
+            <Text style={{
+              color: ejercicioSeleccionado?.id === item.id ? '#fff' : '#000',
+              fontWeight: '600'
+            }}>
+              {item.nombre}
+            </Text>
+
+            <Text style={{
+              fontSize: 12,
+              color: ejercicioSeleccionado?.id === item.id ? '#fff' : '#666'
+            }}>
+              {item.grupo} • {item.dificultad}
+            </Text>
+          </TouchableOpacity>
+        )}
+      />
+
+      {/* VARIANTES */}
+      {ejercicioSeleccionado && (
+        <View style={{ marginTop: 10 }}>
+          <Text style={{ marginBottom: 5 }}>Variantes:</Text>
+
+          {ejercicioSeleccionado.variantes.map((v, i) => (
             <TouchableOpacity
-              key={g}
-              onPress={() => setGrupoSeleccionado(g)}
+              key={i}
+              onPress={() => setVarianteSeleccionada(v)}
               style={{
                 padding: 8,
-                backgroundColor: grupoSeleccionado === g ? '#000' : '#ddd',
-                borderRadius: 20,
-                marginRight: 5,
+                backgroundColor:
+                  varianteSeleccionada === v ? '#4caf50' : '#eee',
+                borderRadius: 10,
                 marginBottom: 5
               }}
             >
-              <Text style={{
-                color: grupoSeleccionado === g ? '#fff' : '#000'
-              }}>
-                {g}
-              </Text>
+              <Text>{v}</Text>
             </TouchableOpacity>
           ))}
         </View>
-            {ejercicioSeleccionado && (
-            <View style={{ marginTop: 10 }}>
-                <Text style={{ marginBottom: 5 }}>Variantes:</Text>
+      )}
 
-                {ejercicioSeleccionado.variantes.map((v, i) => (
-                <TouchableOpacity
-                    key={i}
-                    onPress={() => setVarianteSeleccionada(v)}
-                    style={{
-                    padding: 8,
-                    backgroundColor:
-                        varianteSeleccionada === v ? '#4caf50' : '#eee',
-                    borderRadius: 10,
-                    marginBottom: 5
-                    }}
-                >
-                    <Text>{v}</Text>
-                </TouchableOpacity>
-                ))}
+      {/* BOTÓN AGREGAR */}
+      <TouchableOpacity
+        onPress={agregar}
+        style={{
+          backgroundColor: '#000',
+          padding: 15,
+          borderRadius: 10,
+          marginTop: 10,
+          alignItems: 'center'
+        }}
+      >
+        <Text style={{ color: '#fff' }}>
+          Agregar
+        </Text>
+      </TouchableOpacity>
 
-                {/* BOTON AGREGAR (CONFIRMAR) */}
-                <TouchableOpacity
-                  onPress={agregar}
-                  disabled={!varianteSeleccionada}
-                  style={{
-                    marginTop: 10,
-                    padding: 12,
-                    borderRadius: 10,
-                    backgroundColor: varianteSeleccionada ? '#000' : '#ccc',
-                    alignItems: 'center'
-                  }}
-                >
-                  <Text style={{ color: '#fff' }}>Agregar</Text>
-                </TouchableOpacity>
-            </View>
-            )}
-        {/* LISTA DE EJERCICIOS DISPONIBLES */}
-        {ejerciciosFiltrados.map((e) => (
-  <TouchableOpacity
-    key={e.id}
-    onPress={() => {
-      setEjercicioSeleccionado(e);
-      setVarianteSeleccionada(null);
-    }}
-    style={{
-      padding: 10,
-      backgroundColor:
-        ejercicioSeleccionado?.id === e.id ? '#000' : '#fff',
-      borderRadius: 10,
-      marginBottom: 5,
-      marginTop: 5
-    }}
-  >
-    <Text style={{
-      color: ejercicioSeleccionado?.id === e.id ? '#fff' : '#000',
-      fontWeight: '600'
-    }}>
-      {e.nombre}
-    </Text>
-
-    <Text style={{
-      color: ejercicioSeleccionado?.id === e.id ? '#fff' : '#666',
-      fontSize: 12
-    }}>
-      {e.grupo} • {e.dificultad}
-    </Text>
-  </TouchableOpacity>
-        ))}
-          </View>
-)}
-      </View>
- 
+  </Animated.View>
+</Pressable>
+</Pressable>
+</Modal>
     </View>
+    </>
+    
   );
 }
