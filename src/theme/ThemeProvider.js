@@ -3,25 +3,25 @@ import { ThemeContext } from './ThemeContext';
 
 const colors = {
   light: {
-    background: '#ffffff',
-    card: '#f5f5f5',
-    text: '#111111',
-    subtext: '#666666',
-    primary: '#4caf50',
-    border: '#e0e0e0',
-    muted: '#999999',
+    background: '#CDD5DB',
+    card: '#A8B5C4',
+    text: '#071739',
+    subtext: '#4B6382',
+    primary: '#A68B66',
+    border: '#4B6382',
+    muted: '#A8B5C4',
     shadow: '#000000'
   },
   dark: {
-    background: '#0f0f0f',     // fondo general
-    card: '#1c1c1e',           // cards tipo iOS
-    text: '#ffffff',
-    subtext: '#a1a1a6',
-    primary: '#4caf50',
-    border: '#2c2c2e',
-    muted: '#555555',
+    background: '#071739',
+    card: '#4B6382',
+    text: '#E3C390',
+    subtext: '#A8B5C4',
+    primary: '#E3C390',
+    border: '#A68B66',
+    muted: '#4B6382',
     shadow: '#000000',
-    surface: '#888888ff'
+    surface: '#CDD5DB'
   }
 };
 

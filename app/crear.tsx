@@ -1,53 +1,85 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, TextInput, Modal, Pressable } from 'react-native';
 import { useState } from 'react';
 import { guardarRutina } from '../src/storage';
 import { useRouter } from 'expo-router';
 
+import ThemedView from '../src/components/ThemedView';
+import ThemedText from '../src/components/ThemedText';
+import Button from '../src/components/Button';
+import { useTheme } from '../src/theme/ThemeContext';
+
 export default function Crear() {
   const [nombre, setNombre] = useState('');
+  const [visible, setVisible] = useState(false);
   const router = useRouter();
+  const theme = useTheme();
 
   const guardar = async () => {
     if (!nombre) return;
 
     await guardarRutina({ nombre });
+    setNombre('');
+    setVisible(false);
     router.back();
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#f5f5f5', padding: 20 }}>
+    <ThemedView style={{ justifyContent: 'center', alignItems: 'center' }}>
 
-      <Text style={{ fontSize: 26, fontWeight: 'bold', marginBottom: 20 }}>
-        Nueva Rutina
-      </Text>
+      <Button title="Crear rutina" onPress={() => setVisible(true)} />
 
-      <TextInput
-        placeholder="Ej: Pecho y tríceps"
-        value={nombre}
-        onChangeText={setNombre}
-        style={{
-          backgroundColor: '#fff',
-          padding: 15,
-          borderRadius: 10,
-          fontSize: 16,
-          marginBottom: 20
-        }}
-      />
+      <Modal transparent visible={visible} animationType="fade">
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+          onPress={() => setVisible(false)}
+        >
+          <Pressable
+            onPress={() => {}}
+            style={{
+              width: '90%',
+              backgroundColor: theme.card,
+              padding: 20,
+              borderRadius: 20,
+              borderWidth: 1,
+              borderColor: theme.border
+            }}
+          >
 
-      <TouchableOpacity
-        onPress={guardar}
-        style={{
-          backgroundColor: '#000',
-          padding: 15,
-          borderRadius: 10,
-          alignItems: 'center'
-        }}
-      >
-        <Text style={{ color: '#fff', fontSize: 16 }}>
-          Guardar rutina
-        </Text>
-      </TouchableOpacity>
+            <ThemedText style={{
+              fontSize: 20,
+              fontWeight: '700',
+              marginBottom: 15
+            }}>
+              Nueva rutina
+            </ThemedText>
 
-    </View>
+            <TextInput
+              placeholder="Ej: Pecho y tríceps"
+              placeholderTextColor={theme.muted}
+              value={nombre}
+              onChangeText={setNombre}
+              style={{
+                backgroundColor: theme.background,
+                padding: 14,
+                borderRadius: 12,
+                color: theme.text,
+                borderWidth: 1,
+                borderColor: theme.border,
+                marginBottom: 15
+              }}
+            />
+
+            <Button title="Guardar" onPress={guardar} />
+
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+    </ThemedView>
   );
 }

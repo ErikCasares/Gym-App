@@ -30,6 +30,15 @@ export const eliminarRutina = async (index) => {
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
 
+export const guardarPerfil = async (perfil) => {
+  await AsyncStorage.setItem('perfil', JSON.stringify(perfil));
+};
+
+export const obtenerPerfil = async () => {
+  const data = await AsyncStorage.getItem('perfil');
+  return data ? JSON.parse(data) : null;
+};
+
 export const agregarEjercicio = async (rutinaIndex, ejercicio) => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
