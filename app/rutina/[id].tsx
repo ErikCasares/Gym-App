@@ -1,9 +1,8 @@
 // =======================
 // IMPORTS
 // =======================
-import { Stack } from 'expo-router';
 
-import { useLocalSearchParams } from 'expo-router'; // obtener params de la ruta (id)
+import { useLocalSearchParams, Stack, useRouter  } from 'expo-router'; // obtener params de la ruta (id)
 import { useEffect, useState, useRef } from 'react';
 import {
   Modal,
@@ -25,7 +24,7 @@ import {
 } from '../../src/storage'; // funciones de storage
 
 import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
-
+import { useTheme } from '../../src/theme/ThemeContext';
 
 
 // =======================
@@ -36,6 +35,7 @@ const fadeAnim = useRef(new Animated.Value(0)).current;
 const translateY = useRef(new Animated.Value(0)).current;
 const [varianteSeleccionada, setVarianteSeleccionada] = useState(null);
 const headerPanEnabled = useRef(false);
+const theme = useTheme();
 
 const panResponder = useRef(
   PanResponder.create({
@@ -109,7 +109,7 @@ const panResponder = useRef(
   const [nombre, setNombre] = useState('');
   const [series, setSeries] = useState('');
   const [reps, setReps] = useState('');
-
+  const router = useRouter();
   // =======================
   // ANIMACION DE PROGRESO
   // =======================
@@ -127,9 +127,14 @@ const panResponder = useRef(
   // COLOR SEGUN PROGRESO
   // =======================
   const getColor = () => {
-    if (progreso < 0.3) return '#ff4d4d'; // rojo
-    if (progreso < 0.7) return '#ffcc00'; // amarillo
-    return '#4caf50'; // verde
+    // usar valores del theme con fallback
+    const danger = theme?.danger || '#ff4d4d';
+    const warning = theme?.primary || '#ffcc00';
+    const success = theme?.success || '#4caf50';
+
+    if (progreso < 0.3) return danger; // rojo
+    if (progreso < 0.7) return warning; // amarillo / primary
+    return success; // verde
   };
 
   // =======================
@@ -202,26 +207,39 @@ const agregar = async () => {
 <Stack.Screen
   options={{
     title: rutina?.nombre || 'Rutina',
-    headerBackTitle: 'Volver'
+    headerBackTitle: 'Volver',
+    headerShown: false,
   }}
 />
-    <View style={{ flex: 1, padding: 20, backgroundColor: '#f5f5f5' }}>
+    <View style={{ 
+        flex: 1, 
+        padding: 20, 
+        backgroundColor: theme.background, 
+        paddingTop: 70 }}>
       
       {/* TITULO */}
-      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>
+      <Text style={{ 
+        fontSize: 24, 
+        fontWeight: 'bold', 
+        color: theme.text  
+      }}>
         {rutina.nombre}
       </Text>
 
       {/* PROGRESO */}
-      <View style={{ marginTop: 20 }}>
-        <Text style={{ fontSize: 16, marginBottom: 5, fontWeight: '600' }}>
-          {Math.round(progreso * 100)}% completado
+        <View style={{ marginTop: 20 }}>
+        <Text style={{
+            fontSize: 16,
+            marginBottom: 5,
+            fontWeight: '600',
+            color: theme.text
+        }}>
+            {Math.round(progreso * 100)}% completado
         </Text>
-
         {/* BARRA ANIMADA */}
         <View style={{
-          height: 12,
-          backgroundColor: '#ddd',
+          height: 10,
+          backgroundColor: theme.border,
           borderRadius: 10,
           overflow: 'hidden'
         }}>
@@ -241,14 +259,14 @@ const agregar = async () => {
       {/* BARRA SIMPLE (duplicada) */}
       <View style={{
         height: 10,
-        backgroundColor: '#ddd',
+        backgroundColor: theme.border,
         borderRadius: 10,
         overflow: 'hidden'
       }}>
         <View style={{
           width: `${progreso * 100}%`,
           height: '100%',
-          backgroundColor: '#4caf50'
+          backgroundColor: theme?.success || '#4caf50'
         }} />
       </View>
 
@@ -259,33 +277,36 @@ const agregar = async () => {
         data={rutina.ejercicios}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item, index }) => (
-          <View style={{
-            backgroundColor: '#fff',
+            <View style={{
+            backgroundColor: theme.card,
             padding: 15,
-            borderRadius: 10,
+            borderRadius: 12,
             marginTop: 10,
             flexDirection: 'row',
             justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: theme.border
+            }}>
 
             {/* TOGGLE COMPLETADO */}
             <TouchableOpacity onPress={async () => {
               await toggleEjercicio(rutinaIndex, index);
               cargar();
             }}>
-              <Text style={{
-                    fontSize: 16,
-                    textDecorationLine: item.completado ? 'line-through' : 'none'
+                <Text style={{
+                fontSize: 16,
+                textDecorationLine: item.completado ? 'line-through' : 'none',
+                color: item.completado ? theme.muted : theme.text
                 }}>
                     {item.nombre} - {item.variante}
                 </Text>
 
-                <Text style={{ fontSize: 12, color: '#666' }}>
+                <Text style={{ fontSize: 12, color: theme.muted}}>
                     {item.series}x{item.reps} • {item.dificultad}
                 </Text>
 
-                <Text style={{ fontSize: 12, color: '#999' }}>
+                <Text style={{ fontSize: 12, color: theme?.muted || '#999' }}>
                     {formatearEquipo(item.equipo)}
                 </Text>
             </TouchableOpacity>
@@ -295,7 +316,7 @@ const agregar = async () => {
               await eliminarEjercicio(rutinaIndex, index);
               cargar();
             }}>
-              <Text style={{ color: 'red' }}>X</Text>
+              <Text style={{ color: theme?.danger || 'red' }}>X</Text>
             </TouchableOpacity>
 
           </View>
@@ -306,20 +327,20 @@ const agregar = async () => {
           SELECTOR DE EJERCICIOS
       ======================= */}
       <View style={{ marginTop: 20 }}>
-        <Text style={{ marginBottom: 10 }}>Seleccionar ejercicio</Text>
+        <Text style={{ marginBottom: 10, color: theme.text }}>Seleccionar ejercicio</Text>
 
                     {/* BOTÓN MOSTRAR SELECTOR */}
             <TouchableOpacity
               onPress={() => setMostrarSelector(!mostrarSelector)}
               style={{
-                backgroundColor: '#000',
+                backgroundColor: theme.primary ,
                 padding: 12,
                 borderRadius: 10,
                 marginTop: 20,
                 alignItems: 'center'
               }}
             >
-              <Text style={{ color: '#fff' }}>
+              <Text style={{ color: theme.onPrimary  }}>
                 {mostrarSelector ? 'Cerrar' : 'Agregar ejercicio'}
               </Text>
             </TouchableOpacity>
@@ -333,7 +354,7 @@ const agregar = async () => {
   style={{
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end'
+    justifyContent: 'flex-end',
   }}
   onPress={() => setMostrarSelector(false)}
 >
@@ -343,20 +364,23 @@ const agregar = async () => {
   <Animated.View
     {...panResponder.panHandlers}
 style={{
-  backgroundColor: '#fff',
-  borderTopLeftRadius: 20,
-  borderTopRightRadius: 20,
+  backgroundColor: theme?.surface || theme?.card,
+  borderRadius: 20,
   padding: 20,
   maxHeight: '80%',
   transform: [{ translateY }],
-  marginBottom: 0
+  shadowColor: theme.shadow,
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 10,
+  elevation: 10
 }}
   >
   {/* HANDLE */}
   <View style={{
     width: 40,
     height: 5,
-    backgroundColor: '#ccc',
+    backgroundColor: theme.muted,
     borderRadius: 10,
     alignSelf: 'center',
     marginBottom: 10
@@ -369,11 +393,26 @@ style={{
         style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          marginBottom: 10 ,
+          marginTop: 20 
         }}>
         <Text style={{ fontSize: 18, fontWeight: '600' }}>
           Seleccionar ejercicio
         </Text>
+        {/* BOTÓN BACK */}
+        <TouchableOpacity onPress={() => router.back()}>
+            <Text style={{ fontSize: 22 }}>←</Text>
+        </TouchableOpacity>
+        {/* TÍTULO */}
+        <Text style={{
+            fontSize: 20,
+            fontWeight: '600'
+        }}>
+            {rutina?.nombre}
+        </Text>
+        {/* ESPACIADOR */}
+        <View style={{ width: 24 }} />
 
         <TouchableOpacity onPress={() => setMostrarSelector(false)}>
           <Text style={{ fontSize: 18 }}>✖</Text>
@@ -383,13 +422,17 @@ style={{
       {/* BUSCADOR */}
       <TextInput
         placeholder="Buscar ejercicio..."
+        placeholderTextColor={theme?.muted || '#999'}
         value={busqueda}
         onChangeText={setBusqueda}
         style={{
-          backgroundColor: '#f0f0f0',
+          backgroundColor: theme.background,
           padding: 12,
           borderRadius: 12,
-          marginTop: 15
+          marginTop: 15,
+          color: theme.text,
+          borderColor: theme.border,
+          borderWidth: 1
         }}
       />
 
@@ -408,13 +451,14 @@ style={{
             style={{
               padding: 12,
               backgroundColor:
-                ejercicioSeleccionado?.id === item.id ? '#000' : '#fff',
+                ejercicioSeleccionado?.id === item.id ? theme.primary : theme.background,
               borderRadius: 12,
               marginBottom: 8
             }}
           >
             <Text style={{
-              color: ejercicioSeleccionado?.id === item.id ? '#fff' : '#000',
+              color:
+                ejercicioSeleccionado?.id === item.id  ? '#fff'  : theme.text,
               fontWeight: '600'
             }}>
               {item.nombre}
@@ -422,7 +466,7 @@ style={{
 
             <Text style={{
               fontSize: 12,
-              color: ejercicioSeleccionado?.id === item.id ? '#fff' : '#666'
+              color: ejercicioSeleccionado?.id === item.id ? (theme?.onPrimary || '#fff') : (theme?.muted || '#666')
             }}>
               {item.grupo} • {item.dificultad}
             </Text>
@@ -432,7 +476,7 @@ style={{
 
       {/* VARIANTES */}
       {ejercicioSeleccionado && (
-        <View style={{ marginTop: 10 }}>
+        <View style={{ marginTop: 10 , padding: 10, borderWidth : 5 , borderColor: theme.card, borderRadius: 10}}>
           <Text style={{ marginBottom: 5 }}>Variantes:</Text>
 
           {ejercicioSeleccionado.variantes.map((v, i) => (
@@ -442,12 +486,12 @@ style={{
               style={{
                 padding: 8,
                 backgroundColor:
-                  varianteSeleccionada === v ? '#4caf50' : '#eee',
+                  varianteSeleccionada === v ? theme.primary : theme.background,
                 borderRadius: 10,
                 marginBottom: 5
               }}
             >
-              <Text>{v}</Text>
+              <Text style={{ color: theme?.text || '#000' }}>{v}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -457,14 +501,14 @@ style={{
       <TouchableOpacity
         onPress={agregar}
         style={{
-          backgroundColor: '#000',
+          backgroundColor: theme?.primary || '#000',
           padding: 15,
           borderRadius: 10,
           marginTop: 10,
           alignItems: 'center'
         }}
       >
-        <Text style={{ color: '#fff' }}>
+        <Text style={{ color: theme?.onPrimary || '#fff' }}>
           Agregar
         </Text>
       </TouchableOpacity>
