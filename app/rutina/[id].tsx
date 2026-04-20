@@ -294,21 +294,28 @@ const agregar = async () => {
               await toggleEjercicio(rutinaIndex, index);
               cargar();
             }}>
-                <Text style={{
-                fontSize: 16,
-                textDecorationLine: item.completado ? 'line-through' : 'none',
-                color: item.completado ? theme.muted : theme.text
-                }}>
-                    {item.nombre} - {item.variante}
-                </Text>
+            <Text style={{
+            fontSize: 16,
+            textDecorationLine: item.completado ? 'line-through' : 'none',
+            color: item.completado ? theme.success : theme.text,
+            opacity: item.completado ? 1 : 5
+            }}>
+            {item.nombre} - {item.variante}
+            </Text>
 
-                <Text style={{ fontSize: 12, color: theme.muted}}>
-                    {item.series}x{item.reps} • {item.dificultad}
-                </Text>
+            <Text style={{
+            fontSize: 12,
+            color: item.completado ? theme.success : theme.text
+            }}>
+            {item.series}x{item.reps} • {item.dificultad}
+            </Text>
 
-                <Text style={{ fontSize: 12, color: theme?.muted || '#999' }}>
-                    {formatearEquipo(item.equipo)}
-                </Text>
+            <Text style={{
+            fontSize: 12,
+            color: theme.muted
+            }}>
+            {formatearEquipo(item.equipo)}
+            </Text>
             </TouchableOpacity>
 
             {/* ELIMINAR */}
@@ -345,10 +352,7 @@ const agregar = async () => {
               </Text>
             </TouchableOpacity>
       </View>
-              <Modal
-  visible={mostrarSelector}
-  animationType="slide"
-  transparent={true}
+              <Modal visible={mostrarSelector}  animationType="slide"  transparent={true}
 >
 <Pressable
   style={{
@@ -365,9 +369,11 @@ const agregar = async () => {
     {...panResponder.panHandlers}
 style={{
   backgroundColor: theme?.surface || theme?.card,
-  borderRadius: 20,
+  borderTopLeftRadius: 20,
+  borderTopRightRadius: 20,
   padding: 20,
-  maxHeight: '80%',
+  maxHeight: '85%',
+  width: '100%',
   transform: [{ translateY }],
   shadowColor: theme.shadow,
   shadowOffset: { width: 0, height: -2 },
@@ -486,7 +492,7 @@ style={{
               style={{
                 padding: 8,
                 backgroundColor:
-                  varianteSeleccionada === v ? theme.primary : theme.background,
+                  varianteSeleccionada === v ? (theme?.onPrimary || '#fff') : (theme?.muted || '#666'),
                 borderRadius: 10,
                 marginBottom: 5
               }}

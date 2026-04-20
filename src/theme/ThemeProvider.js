@@ -10,7 +10,10 @@ const colors = {
     primary: '#A68B66',
     border: '#4B6382',
     muted: '#A8B5C4',
-    shadow: '#000000'
+    shadow: '#000000',
+    surface: '#E3C390',
+    success: '#4CAF50',
+    danger: '#ff4d4d',
   },
   dark: {
     background: '#071739',
@@ -21,7 +24,9 @@ const colors = {
     border: '#A68B66',
     muted: '#4B6382',
     shadow: '#000000',
-    surface: '#CDD5DB'
+    surface: '#CDD5DB',
+    success: '#4CAF50',
+    danger: '#ff4d4d',
   }
 };
 

@@ -1,14 +1,55 @@
-import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Alert, Modal, TextInput, Pressable, Animated, PanResponder } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { obtenerRutinas, eliminarRutina } from '../../src/storage';
 import { useFocusEffect } from 'expo-router';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { RUTINAS as RUTINAS_PREARMADAS } from '../../src/rutinasBase';
+
+
 
 export default function Home() {
   const router = useRouter();
   const [rutinas, setRutinas] = useState([]);
+  const [visible, setVisible] = useState(false);
+  const [nombre, setNombre] = useState('');
+  const [rutinaSeleccionada, setRutinaSeleccionada] = useState(null);
+  const [modoPrearmada, setModoPrearmada] = useState(false);
   const theme = useTheme();
+
+  const translateY = useState(new Animated.Value(0))[0];
+  const headerPanEnabled = useRef(false);
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      return headerPanEnabled.current && gestureState.dy > 10;
+    },
+    onPanResponderMove: (_, gestureState) => {
+      if (gestureState.dy > 0) {
+        translateY.setValue(gestureState.dy);
+      }
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dy > 120 || gestureState.vy > 1.2) {
+        setVisible(false);
+        translateY.setValue(0);
+      } else {
+        Animated.spring(translateY, {
+          toValue: 0,
+          useNativeDriver: true
+        }).start();
+      }
+    }
+  });
+
+  const crearRutina = async () => {
+    if (!nombre) return;
+    const { guardarRutina } = require('../../src/storage');
+    await guardarRutina({ nombre });
+    setNombre('');
+    setVisible(false);
+    cargarRutinas();
+  };
 
   const cargarRutinas = async () => {
     const data = await obtenerRutinas();
@@ -111,7 +152,11 @@ export default function Home() {
 
       {/* BOTÓN FLOTANTE */}
       <TouchableOpacity
-        onPress={() => router.push('/crear')}
+        onPress={() => {
+          setModoPrearmada(false);
+          translateY.setValue(0);
+          setVisible(true);
+        }}
         style={{
           position: 'absolute',
           bottom: 30,
@@ -138,6 +183,160 @@ export default function Home() {
           +
         </Text>
       </TouchableOpacity>
+
+      {/* BOTÓN PREARMADAS */}
+      <TouchableOpacity
+        onPress={() => {
+          setModoPrearmada(true);
+          setRutinaSeleccionada(null);
+          setNombre('');
+          translateY.setValue(0);
+          setVisible(true);
+        }}
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 100,
+          backgroundColor: theme.card,
+          width: 60,
+          height: 60,
+          borderRadius: 30,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: theme.border
+        }}
+      >
+        <Text
+          style={{
+            color: theme.text,
+            fontSize: 22,
+            fontWeight: '600'
+          }}
+        >
+          ★
+        </Text>
+      </TouchableOpacity>
+
+      <Modal transparent visible={visible} animationType="slide">
+        <Pressable
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            justifyContent: 'flex-end'
+          }}
+          onPress={() => setVisible(false)}
+        >
+          <Pressable onPress={() => {}} style={{ width: '100%' }}>
+            <Animated.View
+              {...panResponder.panHandlers}
+              style={{
+                backgroundColor: theme.card,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                padding: 20,
+                maxHeight: '80%',
+                transform: [{ translateY }]
+              }}
+            >
+
+              {/* HANDLE */}
+              <View
+                onStartShouldSetResponder={() => true}
+                onResponderGrant={() => (headerPanEnabled.current = true)}
+                onResponderRelease={() => (headerPanEnabled.current = false)}
+                style={{
+                  width: 40,
+                  height: 5,
+                  backgroundColor: theme.border,
+                  borderRadius: 10,
+                  alignSelf: 'center',
+                  marginBottom: 10
+                }}
+              />
+
+              <Text style={{
+                fontSize: 20,
+                fontWeight: '700',
+                marginBottom: 15,
+                color: theme.text
+              }}>
+                {modoPrearmada ? 'Rutinas prearmadas' : 'Nueva rutina'}
+              </Text>
+
+              {modoPrearmada && (
+                <FlatList
+                  data={RUTINAS_PREARMADAS}
+                  keyExtractor={(item) => item.id.toString()}
+                  style={{ marginBottom: 15 }}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={async () => {
+                        const { usarPlantilla } = require('../../src/storage');
+                        await usarPlantilla(item);
+                        setVisible(false);
+                        cargarRutinas();
+                      }}
+                      style={{
+                        backgroundColor: theme.background,
+                        padding: 15,
+                        borderRadius: 12,
+                        marginBottom: 10,
+                        borderWidth: 1,
+                        borderColor: theme.border
+                      }}
+                    >
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: theme.text }}>
+                        {item.nombre}
+                      </Text>
+
+                      <Text style={{ fontSize: 12, color: theme.muted, marginTop: 5 }}>
+                        {item.ejercicios.length} ejercicios
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              )}
+
+              {!modoPrearmada && (
+                <TextInput
+                  placeholder={rutinaSeleccionada ? rutinaSeleccionada.nombre : "Ej: Pecho y tríceps"}
+                  placeholderTextColor={theme.muted}
+                  value={nombre}
+                  onChangeText={setNombre}
+                  editable={!rutinaSeleccionada}
+                  style={{
+                    backgroundColor: theme.background,
+                    padding: 14,
+                    borderRadius: 12,
+                    color: theme.text,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    marginBottom: 15
+                  }}
+                />
+              )}
+
+              {!modoPrearmada && (
+                <TouchableOpacity
+                  onPress={crearRutina}
+                  style={{
+                    backgroundColor: theme.primary,
+                    padding: 14,
+                    borderRadius: 12,
+                    alignItems: 'center'
+                  }}
+                >
+                  <Text style={{ color: theme.onPrimary, fontWeight: '600' }}>
+                    Guardar
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+            </Animated.View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }

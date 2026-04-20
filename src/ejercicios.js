@@ -146,7 +146,7 @@ export const EJERCICIOS = [
     series: 3,
     reps: 15,
     dificultad: 'baja',
-    equipo: ['sin equipo', 'peso corporal'],
+    equipo: ['peso corporal'],
     variantes: [
       'Flexiones clásicas',
       'Flexiones inclinadas',
@@ -290,7 +290,7 @@ export const EJERCICIOS = [
     series: 3,
     reps: 20,
     dificultad: 'baja',
-    equipo: ['sin equipo', 'peso corporal',],
+    equipo: ['peso corporal'],
     variantes: [
       'Crunch clásico',
       'Crunch en máquina'

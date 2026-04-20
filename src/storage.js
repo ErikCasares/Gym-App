@@ -1,12 +1,26 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const KEY = 'rutinas';
+export const usarPlantilla = async (rutinaBase) => {
+  const nuevaRutina = {
+    nombre: rutinaBase.nombre,
+    ejercicios: rutinaBase.ejercicios.map(e => ({
+      ejercicioId: e.ejercicioId,
+      variante: e.variante,
+      completado: false
+    }))
+  };
 
+  await guardarRutina(nuevaRutina);
+};
 export const guardarRutina = async (rutina) => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
 
-  rutinas.push({ ...rutina, ejercicios: [] });
+  rutinas.push({
+    ...rutina,
+    ejercicios: rutina.ejercicios ? rutina.ejercicios : []
+  });
 
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
@@ -43,6 +57,8 @@ export const agregarEjercicio = async (rutinaIndex, ejercicio) => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
 
+  if (!rutinas[rutinaIndex]) return;
+
   if (!rutinas[rutinaIndex].ejercicios) {
     rutinas[rutinaIndex].ejercicios = [];
   }
@@ -54,7 +70,9 @@ export const agregarEjercicio = async (rutinaIndex, ejercicio) => {
 
 export const toggleEjercicio = async (rutinaIndex, ejercicioIndex) => {
   const data = await AsyncStorage.getItem(KEY);
-  const rutinas = JSON.parse(data);
+  const rutinas = data ? JSON.parse(data) : [];
+
+  if (!rutinas[rutinaIndex] || !rutinas[rutinaIndex].ejercicios[ejercicioIndex]) return;
 
   rutinas[rutinaIndex].ejercicios[ejercicioIndex].completado =
     !rutinas[rutinaIndex].ejercicios[ejercicioIndex].completado;
@@ -64,7 +82,9 @@ export const toggleEjercicio = async (rutinaIndex, ejercicioIndex) => {
 
 export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex) => {
   const data = await AsyncStorage.getItem(KEY);
-  const rutinas = JSON.parse(data);
+  const rutinas = data ? JSON.parse(data) : [];
+
+  if (!rutinas[rutinaIndex] || !rutinas[rutinaIndex].ejercicios) return;
 
   rutinas[rutinaIndex].ejercicios.splice(ejercicioIndex, 1);
 
