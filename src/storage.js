@@ -1,40 +1,57 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const KEY = 'rutinas';
-export const usarPlantilla = async (rutinaBase) => {
-  const nuevaRutina = {
-    nombre: rutinaBase.nombre,
-    ejercicios: rutinaBase.ejercicios.map(e => ({
-      ejercicioId: e.ejercicioId,
-      variante: e.variante,
-      completado: false
-    }))
-  };
 
-  await guardarRutina(nuevaRutina);
-};
+// =======================
+// CREAR RUTINA MANUAL
+// =======================
 export const guardarRutina = async (rutina) => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
 
   rutinas.push({
-    ...rutina,
-    ejercicios: rutina.ejercicios ? rutina.ejercicios : []
+    nombre: rutina.nombre,
+    ejercicios: []
   });
 
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
 
+// =======================
+// USAR PLANTILLA
+// =======================
+export const usarPlantilla = async (rutinaBase) => {
+  const data = await AsyncStorage.getItem(KEY);
+  const rutinas = data ? JSON.parse(data) : [];
+
+  const nuevaRutina = {
+    nombre: rutinaBase.nombre,
+    ejercicios: rutinaBase.ejercicios.map(e => ({
+      ...e,
+      completado: false
+    }))
+  };
+
+  rutinas.push(nuevaRutina);
+
+  await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
+};
+
+// =======================
+// OBTENER
+// =======================
 export const obtenerRutinas = async () => {
   try {
     const data = await AsyncStorage.getItem(KEY);
     return data ? JSON.parse(data) : [];
-  } catch (error) {
-    console.log("Error leyendo rutinas:", error);
+  } catch {
     return [];
   }
 };
 
+// =======================
+// ELIMINAR RUTINA
+// =======================
 export const eliminarRutina = async (index) => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
@@ -44,24 +61,12 @@ export const eliminarRutina = async (index) => {
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
 
-export const guardarPerfil = async (perfil) => {
-  await AsyncStorage.setItem('perfil', JSON.stringify(perfil));
-};
-
-export const obtenerPerfil = async () => {
-  const data = await AsyncStorage.getItem('perfil');
-  return data ? JSON.parse(data) : null;
-};
-
+// =======================
+// EJERCICIOS
+// =======================
 export const agregarEjercicio = async (rutinaIndex, ejercicio) => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
-
-  if (!rutinas[rutinaIndex]) return;
-
-  if (!rutinas[rutinaIndex].ejercicios) {
-    rutinas[rutinaIndex].ejercicios = [];
-  }
 
   rutinas[rutinaIndex].ejercicios.push(ejercicio);
 
@@ -70,21 +75,17 @@ export const agregarEjercicio = async (rutinaIndex, ejercicio) => {
 
 export const toggleEjercicio = async (rutinaIndex, ejercicioIndex) => {
   const data = await AsyncStorage.getItem(KEY);
-  const rutinas = data ? JSON.parse(data) : [];
+  const rutinas = JSON.parse(data);
 
-  if (!rutinas[rutinaIndex] || !rutinas[rutinaIndex].ejercicios[ejercicioIndex]) return;
-
-  rutinas[rutinaIndex].ejercicios[ejercicioIndex].completado =
-    !rutinas[rutinaIndex].ejercicios[ejercicioIndex].completado;
+  const ej = rutinas[rutinaIndex].ejercicios[ejercicioIndex];
+  ej.completado = !ej.completado;
 
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
 
 export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex) => {
   const data = await AsyncStorage.getItem(KEY);
-  const rutinas = data ? JSON.parse(data) : [];
-
-  if (!rutinas[rutinaIndex] || !rutinas[rutinaIndex].ejercicios) return;
+  const rutinas = JSON.parse(data);
 
   rutinas[rutinaIndex].ejercicios.splice(ejercicioIndex, 1);
 

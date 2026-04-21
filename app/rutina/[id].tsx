@@ -192,11 +192,12 @@ const agregar = async () => {
   // =======================
   if (!rutina) return null;
 
-  const total = rutina.ejercicios.length;
+  const total = (rutina.entradaEnCalor?.length || 0) + (rutina.ejercicios?.length || 0);
 
-  const completados = rutina.ejercicios.filter(
-    e => e.completado
-  ).length;
+  const completados = [
+    ...(rutina.entradaEnCalor || []),
+    ...(rutina.ejercicios || [])
+  ].filter(e => e.completado).length;
 
   const progreso = total > 0 ? completados / total : 0;
 
@@ -274,60 +275,77 @@ const agregar = async () => {
           LISTA DE EJERCICIOS
       ======================= */}
       <FlatList
-        data={rutina.ejercicios}
+        data={[
+          { tipo: 'titulo', label: '🔥 Entrada en calor' },
+          ...(rutina.entradaEnCalor || []),
+          { tipo: 'titulo', label: '💪 Ejercicios' },
+          ...(rutina.ejercicios || [])
+        ]}
         keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
+        renderItem={({ item, index }) => {
+          if (item.tipo === 'titulo') {
+            return (
+              <Text style={{
+                marginTop: 15,
+                fontSize: 16,
+                fontWeight: '700',
+                color: theme.text
+              }}>
+                {item.label}
+              </Text>
+            );
+          }
+
+          return (
             <View style={{
-            backgroundColor: theme.card,
-            padding: 15,
-            borderRadius: 12,
-            marginTop: 10,
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderWidth: 1,
-            borderColor: theme.border
+              backgroundColor: theme.card,
+              padding: 15,
+              borderRadius: 12,
+              marginTop: 10,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: theme.border
             }}>
 
-            {/* TOGGLE COMPLETADO */}
-            <TouchableOpacity onPress={async () => {
-              await toggleEjercicio(rutinaIndex, index);
-              cargar();
-            }}>
-            <Text style={{
-            fontSize: 16,
-            textDecorationLine: item.completado ? 'line-through' : 'none',
-            color: item.completado ? theme.success : theme.text,
-            opacity: item.completado ? 1 : 5
-            }}>
-            {item.nombre} - {item.variante}
-            </Text>
+              <TouchableOpacity onPress={async () => {
+                await toggleEjercicio(rutinaIndex, index);
+                cargar();
+              }}>
+                <Text style={{
+                  fontSize: 16,
+                  textDecorationLine: item.completado ? 'line-through' : 'none',
+                  color: item.completado ? theme.success : theme.text,
+                }}>
+                  {item.nombre} - {item.variante}
+                </Text>
 
-            <Text style={{
-            fontSize: 12,
-            color: item.completado ? theme.success : theme.text
-            }}>
-            {item.series}x{item.reps} • {item.dificultad}
-            </Text>
+                <Text style={{
+                  fontSize: 12,
+                  color: item.completado ? theme.success : theme.text
+                }}>
+                  {item.series}x{item.reps} • {item.dificultad}
+                </Text>
 
-            <Text style={{
-            fontSize: 12,
-            color: theme.muted
-            }}>
-            {formatearEquipo(item.equipo)}
-            </Text>
-            </TouchableOpacity>
+                <Text style={{
+                  fontSize: 12,
+                  color: theme.muted
+                }}>
+                  {formatearEquipo(item.equipo)}
+                </Text>
+              </TouchableOpacity>
 
-            {/* ELIMINAR */}
-            <TouchableOpacity onPress={async () => {
-              await eliminarEjercicio(rutinaIndex, index);
-              cargar();
-            }}>
-              <Text style={{ color: theme?.danger || 'red' }}>X</Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={async () => {
+                await eliminarEjercicio(rutinaIndex, index);
+                cargar();
+              }}>
+                <Text style={{ color: theme?.danger || 'red' }}>X</Text>
+              </TouchableOpacity>
 
-          </View>
-        )}
+            </View>
+          );
+        }}
       />
 
       {/* =======================

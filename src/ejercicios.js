@@ -296,4 +296,94 @@ export const EJERCICIOS = [
       'Crunch en máquina'
     ]
   }
+  ,
+  {
+    id: 101,
+    nombre: 'Rotación de hombros',
+    grupo: 'Movilidad',
+    series: 2,
+    reps: 15,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Rotación hacia adelante', 'Rotación hacia atrás'],
+    tipo: 'calentamiento'
+  },
+  {
+    id: 102,
+    nombre: 'Rotación de cadera',
+    grupo: 'Movilidad',
+    series: 2,
+    reps: 15,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Círculos amplios', 'Círculos controlados'],
+    tipo: 'calentamiento'
+  },
+  {
+    id: 103,
+    nombre: 'Jumping jacks',
+    grupo: 'Cardio',
+    series: 2,
+    reps: 30,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Ritmo constante', 'Ritmo rápido'],
+    tipo: 'calentamiento'
+  },
+  {
+    id: 104,
+    nombre: 'Skipping',
+    grupo: 'Cardio',
+    series: 2,
+    reps: 30,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Skipping bajo', 'Skipping alto'],
+    tipo: 'calentamiento'
+  },
+  {
+    id: 105,
+    nombre: 'Flexiones inclinadas',
+    grupo: 'Pecho',
+    series: 2,
+    reps: 15,
+    dificultad: 'baja',
+    equipo: ['peso corporal'],
+    variantes: ['Manos en banco', 'Manos en pared'],
+    tipo: 'calentamiento'
+  },
+  {
+    id: 106,
+    nombre: 'Remo con banda',
+    grupo: 'Espalda',
+    series: 2,
+    reps: 15,
+    dificultad: 'baja',
+    equipo: ['banda'],
+    variantes: ['Agarre ancho', 'Agarre cerrado'],
+    tipo: 'calentamiento'
+  },
+  {
+    id: 107,
+    nombre: 'Sentadilla libre (calentamiento)',
+    grupo: 'Piernas',
+    series: 2,
+    reps: 15,
+    dificultad: 'baja',
+    equipo: ['peso corporal'],
+    variantes: ['Lenta', 'Con pausa'],
+    tipo: 'calentamiento'
+  },
+  {
+    id: 108,
+    nombre: 'Plancha (calentamiento)',
+    grupo: 'Core',
+    series: 2,
+    reps: 30,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Plancha frontal', 'Plancha corta'],
+    tipo: 'calentamiento'
+  }
 ];
+

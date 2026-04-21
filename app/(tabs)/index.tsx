@@ -5,7 +5,7 @@ import { obtenerRutinas, eliminarRutina } from '../../src/storage';
 import { useFocusEffect } from 'expo-router';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { RUTINAS as RUTINAS_PREARMADAS } from '../../src/rutinasBase';
-
+import { usarPlantilla, guardarRutina } from '../../src/storage';
 
 
 export default function Home() {
@@ -13,11 +13,15 @@ export default function Home() {
   const [rutinas, setRutinas] = useState([]);
   const [visible, setVisible] = useState(false);
   const [nombre, setNombre] = useState('');
-  const [rutinaSeleccionada, setRutinaSeleccionada] = useState(null);
   const [modoPrearmada, setModoPrearmada] = useState(false);
   const theme = useTheme();
 
   const translateY = useState(new Animated.Value(0))[0];
+  useEffect(() => {
+  if (visible) {
+    translateY.setValue(0);
+  }
+}, [visible]);
   const headerPanEnabled = useRef(false);
 
   const panResponder = PanResponder.create({
@@ -82,7 +86,7 @@ export default function Home() {
       >
         Mis rutinas
       </Text>
-
+        
       {/* LISTA */}
       <FlatList
         data={rutinas}
@@ -188,7 +192,6 @@ export default function Home() {
       <TouchableOpacity
         onPress={() => {
           setModoPrearmada(true);
-          setRutinaSeleccionada(null);
           setNombre('');
           translateY.setValue(0);
           setVisible(true);
@@ -218,7 +221,7 @@ export default function Home() {
         </Text>
       </TouchableOpacity>
 
-      <Modal transparent visible={visible} animationType="slide">
+      <Modal transparent visible={visible} animationType="none">
         <Pressable
           style={{
             flex: 1,
@@ -272,7 +275,7 @@ export default function Home() {
                   renderItem={({ item }) => (
                     <TouchableOpacity
                       onPress={async () => {
-                        const { usarPlantilla } = require('../../src/storage');
+                        
                         await usarPlantilla(item);
                         setVisible(false);
                         cargarRutinas();
@@ -300,11 +303,10 @@ export default function Home() {
 
               {!modoPrearmada && (
                 <TextInput
-                  placeholder={rutinaSeleccionada ? rutinaSeleccionada.nombre : "Ej: Pecho y tríceps"}
+                  placeholder="Ej: Pecho y tríceps"
                   placeholderTextColor={theme.muted}
                   value={nombre}
                   onChangeText={setNombre}
-                  editable={!rutinaSeleccionada}
                   style={{
                     backgroundColor: theme.background,
                     padding: 14,
