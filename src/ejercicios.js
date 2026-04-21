@@ -11,7 +11,8 @@ export const EJERCICIOS = [
       'Press con barra',
       'Press con mancuernas',
       'Press en máquina'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 2,
@@ -25,7 +26,8 @@ export const EJERCICIOS = [
       'Aperturas con mancuernas',
       'Aperturas en máquina',
       'Aperturas en polea'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 3,
@@ -39,7 +41,8 @@ export const EJERCICIOS = [
       'Sentadilla con barra',
       'Sentadilla goblet',
       'Sentadilla libre'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 4,
@@ -52,7 +55,8 @@ export const EJERCICIOS = [
     variantes: [
       'Prensa inclinada',
       'Prensa horizontal'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 5,
@@ -66,7 +70,8 @@ export const EJERCICIOS = [
       'Peso muerto convencional',
       'Peso muerto rumano',
       'Peso muerto con mancuernas'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 6,
@@ -80,7 +85,8 @@ export const EJERCICIOS = [
       'Dominadas pronas',
       'Dominadas supinas',
       'Dominadas asistidas'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 7,
@@ -94,7 +100,8 @@ export const EJERCICIOS = [
       'Curl alternado',
       'Curl con barra',
       'Curl martillo'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 8,
@@ -107,7 +114,8 @@ export const EJERCICIOS = [
     variantes: [
       'Fondos en paralelas',
       'Fondos en banco'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 9,
@@ -121,7 +129,8 @@ export const EJERCICIOS = [
       'Press con barra',
       'Press con mancuernas',
       'Press en máquina'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 10,
@@ -134,7 +143,8 @@ export const EJERCICIOS = [
     variantes: [
       'Elevaciones con mancuernas',
       'Elevaciones en polea'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
 
   // 🔽 NUEVOS EJERCICIOS
@@ -151,7 +161,8 @@ export const EJERCICIOS = [
       'Flexiones clásicas',
       'Flexiones inclinadas',
       'Flexiones diamante'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 12,
@@ -165,7 +176,8 @@ export const EJERCICIOS = [
       'Remo con barra',
       'Remo con mancuernas',
       'Remo en máquina'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 13,
@@ -178,7 +190,8 @@ export const EJERCICIOS = [
     variantes: [
       'Jalón agarre ancho',
       'Jalón agarre cerrado'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 14,
@@ -191,7 +204,8 @@ export const EJERCICIOS = [
     variantes: [
       'Zancadas caminando',
       'Zancadas estáticas'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 15,
@@ -204,7 +218,8 @@ export const EJERCICIOS = [
     variantes: [
       'Hip thrust con barra',
       'Hip thrust con peso corporal'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 16,
@@ -216,7 +231,8 @@ export const EJERCICIOS = [
     equipo: ['máquina'],
     variantes: [
       'Extensión en máquina'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 17,
@@ -229,7 +245,8 @@ export const EJERCICIOS = [
     variantes: [
       'Curl acostado',
       'Curl sentado'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 18,
@@ -242,7 +259,8 @@ export const EJERCICIOS = [
     variantes: [
       'Elevaciones con mancuernas',
       'Elevaciones con disco'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 19,
@@ -255,7 +273,8 @@ export const EJERCICIOS = [
     variantes: [
       'Encogimientos con mancuernas',
       'Encogimientos con barra'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 20,
@@ -268,7 +287,8 @@ export const EJERCICIOS = [
     variantes: [
       'Extensión en polea',
       'Extensión con mancuerna'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 21,
@@ -281,7 +301,8 @@ export const EJERCICIOS = [
     variantes: [
       'Plancha frontal',
       'Plancha lateral'
-    ]
+    ],
+    tipo: 'ejercicio'
   },
   {
     id: 22,
@@ -294,7 +315,8 @@ export const EJERCICIOS = [
     variantes: [
       'Crunch clásico',
       'Crunch en máquina'
-    ]
+    ],
+    tipo: 'ejercicio'
   }
   ,
   {
@@ -306,7 +328,7 @@ export const EJERCICIOS = [
     dificultad: 'baja',
     equipo: ['sin equipo'],
     variantes: ['Rotación hacia adelante', 'Rotación hacia atrás'],
-    tipo: 'calentamiento'
+    tipo: 'entrada'
   },
   {
     id: 102,
@@ -317,7 +339,7 @@ export const EJERCICIOS = [
     dificultad: 'baja',
     equipo: ['sin equipo'],
     variantes: ['Círculos amplios', 'Círculos controlados'],
-    tipo: 'calentamiento'
+    tipo: 'entrada'
   },
   {
     id: 103,
@@ -328,7 +350,7 @@ export const EJERCICIOS = [
     dificultad: 'baja',
     equipo: ['sin equipo'],
     variantes: ['Ritmo constante', 'Ritmo rápido'],
-    tipo: 'calentamiento'
+    tipo: 'entrada'
   },
   {
     id: 104,
@@ -339,7 +361,7 @@ export const EJERCICIOS = [
     dificultad: 'baja',
     equipo: ['sin equipo'],
     variantes: ['Skipping bajo', 'Skipping alto'],
-    tipo: 'calentamiento'
+    tipo: 'entrada'
   },
   {
     id: 105,
@@ -350,7 +372,7 @@ export const EJERCICIOS = [
     dificultad: 'baja',
     equipo: ['peso corporal'],
     variantes: ['Manos en banco', 'Manos en pared'],
-    tipo: 'calentamiento'
+    tipo: 'entrada'
   },
   {
     id: 106,
@@ -361,7 +383,7 @@ export const EJERCICIOS = [
     dificultad: 'baja',
     equipo: ['banda'],
     variantes: ['Agarre ancho', 'Agarre cerrado'],
-    tipo: 'calentamiento'
+    tipo: 'entrada'
   },
   {
     id: 107,
@@ -372,7 +394,7 @@ export const EJERCICIOS = [
     dificultad: 'baja',
     equipo: ['peso corporal'],
     variantes: ['Lenta', 'Con pausa'],
-    tipo: 'calentamiento'
+    tipo: 'entrada'
   },
   {
     id: 108,
@@ -383,7 +405,7 @@ export const EJERCICIOS = [
     dificultad: 'baja',
     equipo: ['sin equipo'],
     variantes: ['Plancha frontal', 'Plancha corta'],
-    tipo: 'calentamiento'
+    tipo: 'entrada'
   }
 ];
 

@@ -1,3 +1,10 @@
+// =========================================
+// 📦 PANTALLA: DETALLE DE RUTINA
+// Esta pantalla permite:
+// - Ver ejercicios y entrada en calor
+// - Marcar progreso
+// - Agregar / eliminar ejercicios
+// =========================================
 // =======================
 // IMPORTS
 // =======================
@@ -37,6 +44,9 @@ const [varianteSeleccionada, setVarianteSeleccionada] = useState(null);
 const headerPanEnabled = useRef(false);
 const theme = useTheme();
 
+// =======================
+// GESTOS (DRAG PARA CERRAR MODAL)
+// =======================
 const panResponder = useRef(
   PanResponder.create({
     onMoveShouldSetPanResponder: (_, gestureState) => {
@@ -71,7 +81,7 @@ const panResponder = useRef(
   })
 ).current;
   // =======================
-  // PARAMETROS Y STATES
+  // ESTADO PRINCIPAL Y PARAMETROS
   // =======================
   const { id } = useLocalSearchParams(); // id de la rutina
 
@@ -88,7 +98,7 @@ const panResponder = useRef(
   const rutinaIndex = Number(id); // convertir id a número
 
   // =======================
-  // BUSQUEDA Y FILTRO
+  // BUSQUEDA Y FILTRO DE EJERCICIOS
   // =======================
   const [busqueda, setBusqueda] = useState('');
   const [grupoSeleccionado, setGrupoSeleccionado] = useState('Todos');
@@ -104,19 +114,19 @@ const panResponder = useRef(
   });
 
   // =======================
-  // INPUTS (no usados del todo todavía)
+  // INPUTS (FORMULARIO AGREGAR)
   // =======================
   const [nombre, setNombre] = useState('');
   const [series, setSeries] = useState('');
   const [reps, setReps] = useState('');
   const router = useRouter();
   // =======================
-  // ANIMACION DE PROGRESO
+  // ANIMACION BARRA DE PROGRESO
   // =======================
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   // =======================
-  // CARGAR DATOS
+  // CARGA DE DATOS (STORAGE)
   // =======================
   const cargar = async () => {
     const data = await obtenerRutinas();
@@ -124,7 +134,7 @@ const panResponder = useRef(
   };
 
   // =======================
-  // COLOR SEGUN PROGRESO
+  // LOGICA DE COLOR SEGUN PROGRESO
   // =======================
   const getColor = () => {
     // usar valores del theme con fallback
@@ -138,7 +148,7 @@ const panResponder = useRef(
   };
 
   // =======================
-  // EFECTOS
+  // EFECTOS (USEEFFECT)
   // =======================
   useEffect(() => {
     cargar(); // cargar al iniciar
@@ -164,7 +174,7 @@ const panResponder = useRef(
     }
 }, [mostrarSelector]);
   // =======================
-  // AGREGAR EJERCICIO
+  // LOGICA PARA AGREGAR EJERCICIO
   // =======================
 const agregar = async () => {
   if (!ejercicioSeleccionado || !varianteSeleccionada) return;
@@ -177,7 +187,8 @@ const agregar = async () => {
     equipo: ejercicioSeleccionado.equipo,
     series: ejercicioSeleccionado.series.toString(),
     reps: ejercicioSeleccionado.reps.toString(),
-    completado: false
+    completado: false,
+    tipo: ejercicioSeleccionado.tipo
   });
 
   setEjercicioSeleccionado(null);
@@ -188,7 +199,7 @@ const agregar = async () => {
 };
 
   // =======================
-  // CALCULOS DE PROGRESO
+  // CALCULO DE PROGRESO
   // =======================
   if (!rutina) return null;
 
@@ -202,7 +213,7 @@ const agregar = async () => {
   const progreso = total > 0 ? completados / total : 0;
 
   // =======================
-  // RENDER
+  // UI (RENDER PRINCIPAL)
   // =======================
   return (<>
 <Stack.Screen
@@ -272,14 +283,14 @@ const agregar = async () => {
       </View>
 
       {/* =======================
-          LISTA DE EJERCICIOS
+          LISTA: ENTRADA EN CALOR + EJERCICIOS
       ======================= */}
       <FlatList
         data={[
           { tipo: 'titulo', label: '🔥 Entrada en calor' },
-          ...(rutina.entradaEnCalor || []),
+          ...(rutina.entradaEnCalor || []).map((e, i) => ({ ...e, tipo: 'entrada', originalIndex: i })),
           { tipo: 'titulo', label: '💪 Ejercicios' },
-          ...(rutina.ejercicios || [])
+          ...(rutina.ejercicios || []).map((e, i) => ({ ...e, tipo: 'ejercicio', originalIndex: i }))
         ]}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item, index }) => {
@@ -310,7 +321,11 @@ const agregar = async () => {
             }}>
 
               <TouchableOpacity onPress={async () => {
-                await toggleEjercicio(rutinaIndex, index);
+                if (item.tipo === 'entrada') {
+                  await toggleEjercicio(rutinaIndex, item.originalIndex, 'entradaEnCalor');
+                } else {
+                  await toggleEjercicio(rutinaIndex, item.originalIndex, 'ejercicios');
+                }
                 cargar();
               }}>
                 <Text style={{
@@ -318,26 +333,31 @@ const agregar = async () => {
                   textDecorationLine: item.completado ? 'line-through' : 'none',
                   color: item.completado ? theme.success : theme.text,
                 }}>
-                  {item.nombre} - {item.variante}
+                  {item.nombre || item.label || 'Ejercicio'} {item.variante ? `- ${item.variante}` : ''}
                 </Text>
 
                 <Text style={{
                   fontSize: 12,
                   color: item.completado ? theme.success : theme.text
                 }}>
-                  {item.series}x{item.reps} • {item.dificultad}
+                  {item.series && item.reps ? `${item.series}x${item.reps}` : ''}
+                  {item.dificultad ? ` • ${item.dificultad}` : ''}
                 </Text>
 
                 <Text style={{
                   fontSize: 12,
                   color: theme.muted
                 }}>
-                  {formatearEquipo(item.equipo)}
+                  {item.equipo ? formatearEquipo(item.equipo) : ''}
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity onPress={async () => {
-                await eliminarEjercicio(rutinaIndex, index);
+                if (item.tipo === 'entrada') {
+                  await eliminarEjercicio(rutinaIndex, item.originalIndex, 'entradaEnCalor');
+                } else {
+                  await eliminarEjercicio(rutinaIndex, item.originalIndex, 'ejercicios');
+                }
                 cargar();
               }}>
                 <Text style={{ color: theme?.danger || 'red' }}>X</Text>
@@ -349,7 +369,7 @@ const agregar = async () => {
       />
 
       {/* =======================
-          SELECTOR DE EJERCICIOS
+          MODAL: SELECTOR DE EJERCICIOS
       ======================= */}
       <View style={{ marginTop: 20 }}>
         <Text style={{ marginBottom: 10, color: theme.text }}>Seleccionar ejercicio</Text>

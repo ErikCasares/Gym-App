@@ -64,11 +64,27 @@ export const eliminarRutina = async (index) => {
 // =======================
 // EJERCICIOS
 // =======================
-export const agregarEjercicio = async (rutinaIndex, ejercicio) => {
+export const agregarEjercicio = async (rutinaIndex, nuevo) => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
 
-  rutinas[rutinaIndex].ejercicios.push(ejercicio);
+  const rutina = rutinas[rutinaIndex];
+
+  // asegurar arrays
+  if (!rutina.entradaEnCalor) rutina.entradaEnCalor = [];
+  if (!rutina.ejercicios) rutina.ejercicios = [];
+
+  if (nuevo.tipo === 'entrada') {
+    rutina.entradaEnCalor = [
+      nuevo,
+      ...rutina.entradaEnCalor
+    ];
+  } else {
+    rutina.ejercicios = [
+      ...rutina.ejercicios,
+      nuevo
+    ];
+  }
 
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
