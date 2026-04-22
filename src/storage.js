@@ -11,6 +11,7 @@ export const guardarRutina = async (rutina) => {
 
   rutinas.push({
     nombre: rutina.nombre,
+    entradaEnCalor: [],
     ejercicios: []
   });
 
@@ -26,10 +27,18 @@ export const usarPlantilla = async (rutinaBase) => {
 
   const nuevaRutina = {
     nombre: rutinaBase.nombre,
-    ejercicios: rutinaBase.ejercicios.map(e => ({
-      ...e,
-      completado: false
-    }))
+    entradaEnCalor: (rutinaBase.ejercicios || [])
+      .filter(e => e.tipo === 'entrada')
+      .map(e => ({
+        ...e,
+        completado: false
+      })),
+    ejercicios: (rutinaBase.ejercicios || [])
+      .filter(e => e.tipo !== 'entrada')
+      .map(e => ({
+        ...e,
+        completado: false
+      }))
   };
 
   rutinas.push(nuevaRutina);
@@ -62,48 +71,54 @@ export const eliminarRutina = async (index) => {
 };
 
 // =======================
-// EJERCICIOS
+// AGREGAR EJERCICIO
 // =======================
-export const agregarEjercicio = async (rutinaIndex, nuevo) => {
+export const agregarEjercicio = async (rutinaIndex, nuevo, tipo = 'ejercicios') => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = data ? JSON.parse(data) : [];
 
   const rutina = rutinas[rutinaIndex];
 
-  // asegurar arrays
   if (!rutina.entradaEnCalor) rutina.entradaEnCalor = [];
   if (!rutina.ejercicios) rutina.ejercicios = [];
 
-  if (nuevo.tipo === 'entrada') {
-    rutina.entradaEnCalor = [
-      nuevo,
-      ...rutina.entradaEnCalor
-    ];
+  if (tipo === 'entrada') {
+    rutina.entradaEnCalor.unshift(nuevo);
   } else {
-    rutina.ejercicios = [
-      ...rutina.ejercicios,
-      nuevo
-    ];
+    rutina.ejercicios.push(nuevo);
   }
 
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
 
-export const toggleEjercicio = async (rutinaIndex, ejercicioIndex) => {
+// =======================
+// TOGGLE
+// =======================
+export const toggleEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejercicios') => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = JSON.parse(data);
 
-  const ej = rutinas[rutinaIndex].ejercicios[ejercicioIndex];
-  ej.completado = !ej.completado;
+  const lista = rutinas[rutinaIndex][tipo];
+
+  if (!lista || !lista[ejercicioIndex]) return;
+
+  lista[ejercicioIndex].completado = !lista[ejercicioIndex].completado;
 
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
 
-export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex) => {
+// =======================
+// ELIMINAR EJERCICIO
+// =======================
+export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejercicios') => {
   const data = await AsyncStorage.getItem(KEY);
   const rutinas = JSON.parse(data);
 
-  rutinas[rutinaIndex].ejercicios.splice(ejercicioIndex, 1);
+  const lista = rutinas[rutinaIndex][tipo];
+
+  if (!lista) return;
+
+  lista.splice(ejercicioIndex, 1);
 
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };

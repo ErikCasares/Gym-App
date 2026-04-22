@@ -105,13 +105,13 @@ const panResponder = useRef(
 
   const grupos = ['Todos', ...new Set(EJERCICIOS.map(e => e.grupo))];
 
-  const ejerciciosFiltrados = EJERCICIOS.filter(e => {
-    const coincideBusqueda = e.nombre.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideGrupo =
-      grupoSeleccionado === 'Todos' || e.grupo === grupoSeleccionado;
+const ejerciciosFiltrados = EJERCICIOS.filter(e => {
+  const coincideBusqueda = e.nombre.toLowerCase().includes(busqueda.toLowerCase());
+  const coincideGrupo =
+    grupoSeleccionado === 'Todos' || e.grupo === grupoSeleccionado;
 
-    return coincideBusqueda && coincideGrupo;
-  });
+  return coincideBusqueda && coincideGrupo && e.tipo === 'ejercicio';
+});
 
   // =======================
   // INPUTS (FORMULARIO AGREGAR)
@@ -179,7 +179,9 @@ const panResponder = useRef(
 const agregar = async () => {
   if (!ejercicioSeleccionado || !varianteSeleccionada) return;
 
-  await agregarEjercicio(rutinaIndex, {
+await agregarEjercicio(
+  rutinaIndex,
+  {
     nombre: ejercicioSeleccionado.nombre,
     variante: varianteSeleccionada,
     grupo: ejercicioSeleccionado.grupo,
@@ -187,9 +189,10 @@ const agregar = async () => {
     equipo: ejercicioSeleccionado.equipo,
     series: ejercicioSeleccionado.series.toString(),
     reps: ejercicioSeleccionado.reps.toString(),
-    completado: false,
-    tipo: ejercicioSeleccionado.tipo
-  });
+    completado: false
+  },
+  ejercicioSeleccionado.tipo // 👈 IMPORTANTE
+);
 
   setEjercicioSeleccionado(null);
   setVarianteSeleccionada(null);
@@ -445,7 +448,7 @@ style={{
           Seleccionar ejercicio
         </Text>
         {/* BOTÓN BACK */}
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => setMostrarSelector(false)}>
             <Text style={{ fontSize: 22 }}>←</Text>
         </TouchableOpacity>
         {/* TÍTULO */}
