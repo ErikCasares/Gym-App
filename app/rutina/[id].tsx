@@ -20,8 +20,11 @@ import {
   FlatList,
   Animated,
   PanResponder,
-  Pressable
+  Pressable,
+  Vibration
 } from 'react-native';
+
+import { Audio } from 'expo-av';
 
 import {
   obtenerRutinas,
@@ -122,6 +125,49 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const [reps, setReps] = useState('');
   const router = useRouter();
 
+  // ---- sonido / alarma ----
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  const playAlarm = async () => {
+    try {
+      // si hay un sonido cargado, detener y descargar primero
+      if (soundRef.current) {
+        try {
+          await soundRef.current.stopAsync();
+          await soundRef.current.unloadAsync();
+        } catch {}
+        soundRef.current = null;
+      }
+
+      // intenta cargar un asset local (añade /assets/alarm.mp3 en tu proyecto)
+      // si no existe, el require lanzará; el catch hará fallback a vibración
+      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/alarm.mp3'),
+        { shouldPlay: true }
+      );
+      soundRef.current = sound;
+      // opcional: no esperar a que termine
+    } catch (e) {
+      // fallback: vibrar si no hay asset o fallo en audio
+      Vibration.vibrate([500, 200, 500]);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      // cleanup sonido al desmontar
+      (async () => {
+        if (soundRef.current) {
+          try {
+            await soundRef.current.unloadAsync();
+          } catch {}
+          soundRef.current = null;
+        }
+      })();
+    };
+  }, []);
+
   // =======================
   // TEMPORIZADOR
   // =======================
@@ -144,7 +190,11 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
       }, 1000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (timerSegundos === 0) setTimerActivo(false);
+      if (timerSegundos === 0) {
+        setTimerActivo(false);
+        // reproducir alarma cuando llega a 0
+        playAlarm();
+      }
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [timerActivo, timerSegundos]);
