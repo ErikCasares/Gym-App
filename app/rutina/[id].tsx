@@ -467,16 +467,16 @@ await agregarEjercicio(
                 <Text style={{
                   fontSize: 18,
                   textDecorationLine: item.completado ? 'line-through' : 'none',
-                  color: item.completado ? theme.success : theme.text,
+                  color: item.completado ? theme.success : theme.text, fontWeight: '800'
                 }}>
-                  {item.nombre || item.label || 'Ejercicio'} {item.variante ? `- ${item.variante}` : ''}
+                  {item.nombre || item.label || 'Ejercicio'} - {item.series && item.reps ? `${item.series}x${item.reps}` : ''}
                 </Text>
 
                 <Text style={{
                   fontSize: 14,
-                  color: item.completado ? theme.success : theme.text
+                  color: item.completado ? theme.success : theme.text, fontWeight: '600'
                 }}>
-                  {item.series && item.reps ? `${item.series}x${item.reps}` : ''}
+                  {item.variante ? `${item.variante}` : ''}
                   {item.grupo ? ` • ${item.grupo}` : ''}
                 </Text>
 
