@@ -27,18 +27,14 @@ export const usarPlantilla = async (rutinaBase) => {
 
   const nuevaRutina = {
     nombre: rutinaBase.nombre,
-    entradaEnCalor: (rutinaBase.ejercicios || [])
-      .filter(e => e.tipo === 'entrada')
-      .map(e => ({
-        ...e,
-        completado: false
-      })),
-    ejercicios: (rutinaBase.ejercicios || [])
-      .filter(e => e.tipo !== 'entrada')
-      .map(e => ({
-        ...e,
-        completado: false
-      }))
+    entradaEnCalor: (rutinaBase.entradaEnCalor || []).map(e => ({
+      ...e,
+      completado: false
+    })),
+    ejercicios: (rutinaBase.ejercicios || []).map(e => ({
+      ...e,
+      completado: false
+    }))
   };
 
   rutinas.push(nuevaRutina);
@@ -71,6 +67,19 @@ export const eliminarRutina = async (index) => {
 };
 
 // =======================
+// RENOMBRAR RUTINA
+// =======================
+export const renombrarRutina = async (index, nuevoNombre) => {
+  const data = await AsyncStorage.getItem(KEY);
+  const rutinas = data ? JSON.parse(data) : [];
+
+  if (!rutinas[index]) return;
+  rutinas[index].nombre = nuevoNombre;
+
+  await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
+};
+
+// =======================
 // AGREGAR EJERCICIO
 // =======================
 export const agregarEjercicio = async (rutinaIndex, nuevo, tipo = 'ejercicios') => {
@@ -96,9 +105,9 @@ export const agregarEjercicio = async (rutinaIndex, nuevo, tipo = 'ejercicios') 
 // =======================
 export const toggleEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejercicios') => {
   const data = await AsyncStorage.getItem(KEY);
-  const rutinas = JSON.parse(data);
+  const rutinas = data ? JSON.parse(data) : [];
 
-  const lista = rutinas[rutinaIndex][tipo];
+  const lista = rutinas[rutinaIndex]?.[tipo];
 
   if (!lista || !lista[ejercicioIndex]) return;
 
@@ -112,7 +121,7 @@ export const toggleEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejerc
 // =======================
 export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejercicios') => {
   const data = await AsyncStorage.getItem(KEY);
-  const rutinas = JSON.parse(data);
+  const rutinas = data ? JSON.parse(data) : [];
 
   const lista = rutinas[rutinaIndex][tipo];
 

@@ -27,7 +27,8 @@ import {
   obtenerRutinas,
   agregarEjercicio,
   toggleEjercicio,
-  eliminarEjercicio
+  eliminarEjercicio,
+  renombrarRutina
 } from '../../src/storage'; // funciones de storage
 
 import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
@@ -86,7 +87,7 @@ const panResponder = useRef(
   const { id } = useLocalSearchParams(); // id de la rutina
 
   const [mostrarSelector, setMostrarSelector] = useState(false); // mostrar/ocultar selector
-  const [rutina, setRutina] = useState(null); // rutina actual
+  const [rutina, setRutina] = useState<any>(null); // rutina actual
   const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState(null);
   const formatearEquipo = (equipo) => {
     if (!equipo || equipo.length === 0) return '';
@@ -120,6 +121,46 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const [series, setSeries] = useState('');
   const [reps, setReps] = useState('');
   const router = useRouter();
+
+  // =======================
+  // TEMPORIZADOR
+  // =======================
+  const [mostrarRenombrar, setMostrarRenombrar] = useState(false);
+  const [nuevoNombre, setNuevoNombre] = useState('');
+
+  const [descripcionVisible, setDescripcionVisible] = useState(false);
+  const [ejercicioDescripcion, setEjercicioDescripcion] = useState<any>(null);
+
+  const [mostrarTimer, setMostrarTimer] = useState(false);
+  const [timerSegundos, setTimerSegundos] = useState(60);
+  const [timerInicial, setTimerInicial] = useState(60);
+  const [timerActivo, setTimerActivo] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (timerActivo && timerSegundos > 0) {
+      timerRef.current = setInterval(() => {
+        setTimerSegundos(s => s - 1);
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerSegundos === 0) setTimerActivo(false);
+    }
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [timerActivo, timerSegundos]);
+
+  const resetTimer = (segundos: number) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimerActivo(false);
+    setTimerSegundos(segundos);
+    setTimerInicial(segundos);
+  };
+
+  const formatTimer = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
   // =======================
   // ANIMACION BARRA DE PROGRESO
   // =======================
@@ -233,13 +274,105 @@ await agregarEjercicio(
         paddingTop: 70 }}>
       
       {/* TITULO */}
-      <Text style={{ 
-        fontSize: 24, 
-        fontWeight: 'bold', 
-        color: theme.text  
-      }}>
-        {rutina.nombre}
-      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold', color: theme.text, flex: 1 }}>
+          {rutina.nombre}
+        </Text>
+        <TouchableOpacity
+          onPress={() => { setNuevoNombre(rutina.nombre); setMostrarRenombrar(true); }}
+          style={{
+            backgroundColor: theme.card,
+            borderWidth: 1,
+            borderColor: theme.border,
+            borderRadius: 8,
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+            marginRight: 70
+          }}
+        >
+          <Text style={{ color: theme.text, fontSize: 13, fontWeight: '600' }}>Renombrar</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* MODAL DESCRIPCION */}
+      <Modal visible={descripcionVisible} transparent animationType="fade">
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => setDescripcionVisible(false)}
+        >
+          <Pressable onPress={() => {}} style={{
+            backgroundColor: theme.card,
+            borderRadius: 20,
+            padding: 24,
+            width: '88%',
+            borderWidth: 1,
+            borderColor: theme.border
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, marginBottom: 4 }}>
+              {ejercicioDescripcion?.nombre}
+            </Text>
+            <Text style={{ fontSize: 13, color: theme.muted, marginBottom: 16 }}>
+              {ejercicioDescripcion?.grupo} {ejercicioDescripcion?.variante ? `• ${ejercicioDescripcion.variante}` : ''}
+            </Text>
+            <Text style={{ fontSize: 15, color: theme.text, lineHeight: 24 }}>
+              {ejercicioDescripcion?.descripcion}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setDescripcionVisible(false)}
+              style={{ marginTop: 20, alignItems: 'center' }}
+            >
+              <Text style={{ color: theme.primary, fontWeight: '600' }}>Cerrar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* MODAL RENOMBRAR */}
+      <Modal visible={mostrarRenombrar} transparent animationType="fade">
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => setMostrarRenombrar(false)}
+        >
+          <Pressable onPress={() => {}} style={{
+            backgroundColor: theme.card,
+            borderRadius: 20,
+            padding: 24,
+            width: '85%',
+            borderWidth: 1,
+            borderColor: theme.border
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, marginBottom: 16 }}>
+              Renombrar rutina
+            </Text>
+            <TextInput
+              value={nuevoNombre}
+              onChangeText={setNuevoNombre}
+              placeholder="Nombre de la rutina"
+              placeholderTextColor={theme.muted}
+              style={{
+                backgroundColor: theme.background,
+                padding: 12,
+                borderRadius: 12,
+                color: theme.text,
+                borderWidth: 1,
+                borderColor: theme.border,
+                marginBottom: 16
+              }}
+            />
+            <TouchableOpacity
+              onPress={async () => {
+                if (!nuevoNombre.trim()) return;
+                await renombrarRutina(rutinaIndex, nuevoNombre.trim());
+                setMostrarRenombrar(false);
+                cargar();
+              }}
+              style={{ backgroundColor: theme.primary, padding: 14, borderRadius: 12, alignItems: 'center' }}
+            >
+              <Text style={{ color: theme.onPrimary, fontWeight: '600' }}>Guardar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* PROGRESO */}
         <View style={{ marginTop: 20 }}>
@@ -332,7 +465,7 @@ await agregarEjercicio(
                 cargar();
               }}>
                 <Text style={{
-                  fontSize: 16,
+                  fontSize: 18,
                   textDecorationLine: item.completado ? 'line-through' : 'none',
                   color: item.completado ? theme.success : theme.text,
                 }}>
@@ -340,31 +473,44 @@ await agregarEjercicio(
                 </Text>
 
                 <Text style={{
-                  fontSize: 12,
+                  fontSize: 14,
                   color: item.completado ? theme.success : theme.text
                 }}>
                   {item.series && item.reps ? `${item.series}x${item.reps}` : ''}
-                  {item.dificultad ? ` • ${item.dificultad}` : ''}
+                  {item.grupo ? ` • ${item.grupo}` : ''}
                 </Text>
 
                 <Text style={{
-                  fontSize: 12,
+                  fontSize: 13,
                   color: theme.muted
                 }}>
                   {item.equipo ? formatearEquipo(item.equipo) : ''}
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={async () => {
-                if (item.tipo === 'entrada') {
-                  await eliminarEjercicio(rutinaIndex, item.originalIndex, 'entradaEnCalor');
-                } else {
-                  await eliminarEjercicio(rutinaIndex, item.originalIndex, 'ejercicios');
-                }
-                cargar();
-              }}>
-                <Text style={{ color: theme?.danger || 'red' }}>X</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                {item.descripcion && (
+                  <TouchableOpacity onPress={() => { setEjercicioDescripcion(item); setDescripcionVisible(true); }}>
+                    <View style={{
+                      width: 24, height: 24, borderRadius: 12,
+                      borderWidth: 1, borderColor: theme.border,
+                      justifyContent: 'center', alignItems: 'center'
+                    }}>
+                      <Text style={{ color: theme.muted, fontSize: 12, fontWeight: '700' }}>i</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={async () => {
+                  if (item.tipo === 'entrada') {
+                    await eliminarEjercicio(rutinaIndex, item.originalIndex, 'entradaEnCalor');
+                  } else {
+                    await eliminarEjercicio(rutinaIndex, item.originalIndex, 'ejercicios');
+                  }
+                  cargar();
+                }}>
+                  <Text style={{ color: theme?.danger || 'red' }}>X</Text>
+                </TouchableOpacity>
+              </View>
 
             </View>
           );
@@ -374,9 +520,7 @@ await agregarEjercicio(
       {/* =======================
           MODAL: SELECTOR DE EJERCICIOS
       ======================= */}
-      <View style={{ marginTop: 20 }}>
-        <Text style={{ marginBottom: 10, color: theme.text }}>Seleccionar ejercicio</Text>
-
+      <View>
                     {/* BOTÓN MOSTRAR SELECTOR */}
             <TouchableOpacity
               onPress={() => setMostrarSelector(!mostrarSelector)}
@@ -393,6 +537,111 @@ await agregarEjercicio(
               </Text>
             </TouchableOpacity>
       </View>
+      {/* BOTÓN FLOTANTE TEMPORIZADOR */}
+      <TouchableOpacity
+        onPress={() => setMostrarTimer(true)}
+        style={{
+          position: 'absolute',
+          top: 70,
+          right: 20,
+          backgroundColor: theme.card,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderWidth: 1,
+          borderColor: theme.border
+        }}
+      >
+        <Text style={{ fontSize: 24 }}>⏱</Text>
+      </TouchableOpacity>
+
+      {/* MODAL TEMPORIZADOR */}
+      <Modal visible={mostrarTimer} transparent animationType="fade">
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => setMostrarTimer(false)}
+        >
+          <Pressable onPress={() => {}} style={{
+            backgroundColor: theme.card,
+            borderRadius: 20,
+            padding: 30,
+            width: '80%',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: theme.border
+          }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text, marginBottom: 20 }}>
+              Temporizador
+            </Text>
+
+            {/* DISPLAY */}
+            <Text style={{
+              fontSize: 64,
+              fontWeight: '200',
+              color: timerSegundos === 0 ? (theme.success || '#4caf50') : theme.text,
+              marginBottom: 24
+            }}>
+              {formatTimer(timerSegundos)}
+            </Text>
+
+            {/* PRESETS */}
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 24 }}>
+              {[30, 60, 90, 120].map(s => (
+                <TouchableOpacity
+                  key={s}
+                  onPress={() => resetTimer(s)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    backgroundColor: timerSegundos === s && !timerActivo ? theme.primary : theme.background,
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: theme.border
+                  }}
+                >
+                  <Text style={{ color: timerSegundos === s && !timerActivo ? theme.onPrimary : theme.text, fontSize: 13 }}>
+                    {s < 60 ? `${s}s` : `${s / 60}min`}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* CONTROLES */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                onPress={() => setTimerActivo(a => !a)}
+                style={{
+                  backgroundColor: theme.primary,
+                  paddingHorizontal: 30,
+                  paddingVertical: 12,
+                  borderRadius: 12
+                }}
+              >
+                <Text style={{ color: theme.onPrimary, fontWeight: '600', fontSize: 16 }}>
+                  {timerActivo ? 'Pausar' : 'Iniciar'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => resetTimer(timerInicial)}
+                style={{
+                  backgroundColor: theme.background,
+                  paddingHorizontal: 20,
+                  paddingVertical: 12,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: theme.border
+                }}
+              >
+                <Text style={{ color: theme.text, fontSize: 16 }}>Reset</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
               <Modal visible={mostrarSelector}  animationType="slide"  transparent={true}
 >
 <Pressable

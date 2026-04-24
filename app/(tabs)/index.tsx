@@ -10,7 +10,7 @@ import { usarPlantilla, guardarRutina } from '../../src/storage';
 
 export default function Home() {
   const router = useRouter();
-  const [rutinas, setRutinas] = useState([]);
+  const [rutinas, setRutinas] = useState<any[]>([]);
   const [visible, setVisible] = useState(false);
   const [nombre, setNombre] = useState('');
   const [modoPrearmada, setModoPrearmada] = useState(false);
@@ -92,7 +92,8 @@ export default function Home() {
         data={rutinas}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item, index }) => (
-          <View
+          <TouchableOpacity
+            onPress={() => router.push(`/rutina/${index}`)}
             style={{
               backgroundColor: theme.card,
               padding: 15,
@@ -101,28 +102,26 @@ export default function Home() {
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
-
-              // sombra suave (modo oscuro friendly)
               borderWidth: 1,
               borderColor: theme.border
             }}
           >
             {/* NOMBRE */}
-            <TouchableOpacity onPress={() => router.push(`/rutina/${index}`)}>
-              <Text
-                style={{
-                  fontSize: 18,
-                  fontWeight: '600',
-                  color: theme.text
-                }}
-              >
-                {item.nombre}
-              </Text>
-            </TouchableOpacity>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '600',
+                color: theme.text,
+                flex: 1
+              }}
+            >
+              {item.nombre}
+            </Text>
 
             {/* ELIMINAR */}
             <TouchableOpacity
-              onPress={() => {
+              onPress={(e) => {
+                e.stopPropagation();
                 Alert.alert(
                   'Eliminar rutina',
                   '¿Seguro que querés borrarla?',
@@ -140,17 +139,11 @@ export default function Home() {
                 );
               }}
             >
-              <Text
-                style={{
-                  color: '#ff4d4d',
-                  fontWeight: 'bold',
-                  fontSize: 16
-                }}
-              >
+              <Text style={{ color: '#ff4d4d', fontWeight: 'bold', fontSize: 16 }}>
                 X
               </Text>
             </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
         )}
       />
 
