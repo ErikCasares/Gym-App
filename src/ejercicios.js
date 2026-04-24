@@ -314,7 +314,7 @@ export const EJERCICIOS = [
     series: 3,
     reps: 30,
     dificultad: 'baja',
-    equipo: ['sin equipo', 'peso corporal'],
+    equipo: ['sin equipo'],
     variantes: [
       'Plancha frontal',
       'Plancha lateral'
@@ -432,6 +432,131 @@ export const EJERCICIOS = [
     variantes: ['Plancha frontal', 'Plancha corta'],
     tipo: 'entrada',
     descripcion: '1) Colócate en posición de plancha sobre antebrazos o manos. 2) Mantén cuerpo en línea recta y activa el core. 3) Sostén la posición durante el tiempo indicado con respiración controlada. 4) Relaja y repite las series.'
+  },
+  {
+    id: 31,
+    nombre: 'Plancha',
+    grupo: 'Core',
+    series: 3,
+    reps: 30,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Plancha frontal', 'Plancha con apoyo de manos', 'Plancha con elevación de pierna'],
+    tipo: 'entrada',
+    descripcion: '1) Colócate en posición de plancha sobre antebrazos o manos, cuerpo en línea recta. 2) Activa glúteos y core para evitar hundir la cadera. 3) Mantén la respiración controlada y la nuca en línea con la columna. 4) Sostén la posición durante 30 segundos por serie. 5) Descansa y repite las series.'
+  },
+  {
+    id: 32,
+    nombre: 'Toe touches',
+    grupo: 'Core',
+    series: 3,
+    reps: 20,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Toe touches tumbado', 'Toe touches con piernas elevadas'],
+    tipo: 'entrada',
+    descripcion: '1) Acuéstate boca arriba con piernas elevadas a 90° o ligeramente flexionadas. 2) Extiende los brazos hacia los pies. 3) Eleva el torso contrayendo el abdomen y toca los dedos de los pies o tobillos con las manos. 4) Baja controlado sin apoyar totalmente la cabeza. 5) Realiza 20 repeticiones por serie manteniendo ritmo controlado.'
+  },
+  {
+    id: 33,
+    nombre: 'Mountain climber',
+    grupo: 'Cardio / Core',
+    series: 3,
+    reps: 60,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Mountain climber lento', 'Mountain climber cruzado'],
+    tipo: 'entrada',
+    descripcion: '1) Colócate en posición de plancha alta con manos bajo los hombros. 2) Lleva una rodilla hacia el pecho y alterna rápidamente con la otra como si corrieras en el sitio. 3) Mantén el core firme y cadera estable, respirando rítmicamente. 4) Realiza 60 repeticiones (cuenta cada cambio de pierna) por serie. 5) Controla el impacto y evita elevar demasiado las caderas.'
+  },
+  {
+    id: 34,
+    nombre: 'Bicicleta (Crunch bicicleta)',
+    grupo: 'Core',
+    series: 3,
+    reps: 20,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: ['Bicicleta lenta', 'Bicicleta con pausa'],
+    tipo: 'entrada',
+    descripcion: '1) Acuéstate boca arriba con manos detrás de la cabeza y piernas elevadas. 2) Lleva el codo derecho hacia la rodilla izquierda mientras extiendes la pierna derecha. 3) Alterna al otro lado en movimiento de pedaleo, contrayendo oblicuos. 4) Ejecuta 20 repeticiones por serie (contar cada toque de codo). 5) Evita tirar del cuello y realiza el movimiento con control.'
+  },
+  {
+    id: 35,
+    nombre: 'Press inclinado',
+    grupo: 'Pecho',
+    series: 4,
+    reps: 8,
+    dificultad: 'media',
+    equipo: ['barra', 'banco inclinado', 'mancuernas'],
+    variantes: [
+      'Press inclinado con barra',
+      'Press inclinado con mancuernas',
+      'Press inclinado en máquina'
+    ],
+    tipo: 'ejercicio',
+    descripcion: '1) Ajusta el banco en inclinación de 30–45°. 2) Acuéstate con la espalda apoyada y pies firmes en el suelo. 3) Agarra la barra con manos un poco más anchas que los hombros o sujeta las mancuernas al nivel del pecho. 4) Desbloquea la barra y baja controlado hacia la parte superior del pecho/clavícula, manteniendo codos en ángulo. 5) Empuja hacia arriba hasta la extensión, exhalando en la fase concéntrica. 6) Mantén el core activo y evita arquear la espalda. 7) Repite con tempo controlado.'
+  },
+
+  // --- ejercicios añadidos para las rutinas solicitadas ---
+  {
+    id: 36,
+    nombre: 'Pájaros (Rear delt fly)',
+    grupo: 'Hombros',
+    series: 3,
+    reps: 12,
+    dificultad: 'baja',
+    equipo: ['mancuernas'],
+    variantes: [
+      'Pájaros con mancuernas',
+      'Pájaros en peck-deck'
+    ],
+    tipo: 'ejercicio',
+    descripcion: '1) Inclínate con la espalda recta y ligera flexión de rodillas. 2) Mantén un ligero doblez en codos y abre los brazos lateralmente hasta la altura de los hombros. 3) Controla la bajada y evita balanceo. 4) Aprieta la parte posterior del hombro en cada repetición.'
+  },
+  {
+    id: 37,
+    nombre: 'Elevaciones de gemelos',
+    grupo: 'Piernas',
+    series: 4,
+    reps: 12,
+    dificultad: 'baja',
+    equipo: ['máquina', 'peso corporal'],
+    variantes: [
+      'Elevaciones de gemelos de pie',
+      'Elevaciones de gemelos sentado'
+    ],
+    tipo: 'ejercicio',
+    descripcion: '1) Colócate en la máquina o en un borde con el talón libre. 2) Eleva los talones lo máximo posible apretando gemelos. 3) Desciende controlado hasta estirar el tobillo. 4) Mantén ritmo controlado y evita impulsos excesivos.'
+  },
+  {
+    id: 38,
+    nombre: 'Remo en máquina',
+    grupo: 'Espalda',
+    series: 3,
+    reps: 10,
+    dificultad: 'media',
+    equipo: ['máquina'],
+    variantes: [
+      'Remo sentado en máquina'
+    ],
+    tipo: 'ejercicio',
+    descripcion: '1) Siéntate ajustando el asiento y el apoyo pectoral (si aplica). 2) Agarra el agarre y tira hacia el torso contrayendo escápulas. 3) Mantén espalda neutra y controla la fase de retorno. 4) Evita balancear el torso.'
+  },
+  {
+    id: 39,
+    nombre: 'Elevaciones de piernas',
+    grupo: 'Core',
+    series: 3,
+    reps: 12,
+    dificultad: 'baja',
+    equipo: ['sin equipo'],
+    variantes: [
+      'Elevaciones de piernas tumbado',
+      'Elevaciones de piernas colgado'
+    ],
+    tipo: 'ejercicio',
+    descripcion: '1) Acuéstate o cuélgate de una barra. 2) Eleva las piernas rectas o semiflexionadas hasta ~90º o hasta donde controles. 3) Baja controlado sin balancear la cadera. 4) Mantén la respiración y activa el core.'
   }
 ];
 
