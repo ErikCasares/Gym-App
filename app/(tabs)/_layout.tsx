@@ -29,6 +29,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="historial"
+        options={{
+          title: 'Historial',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+        }}
+      />
+      <Tabs.Screen
         name="perfil"
         options={{
           title: 'Perfil',

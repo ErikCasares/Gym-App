@@ -30,8 +30,10 @@ import {
   obtenerRutinas,
   agregarEjercicio,
   toggleEjercicio,
+  completarEjercicio,
   eliminarEjercicio,
-  renombrarRutina
+  renombrarRutina,
+  guardarHistorial
 } from '../../src/storage'; // funciones de storage
 
 import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
@@ -177,6 +179,16 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const [descripcionVisible, setDescripcionVisible] = useState(false);
   const [ejercicioDescripcion, setEjercicioDescripcion] = useState<any>(null);
 
+  const [mostrarCompletar, setMostrarCompletar] = useState(false);
+  const [ejercicioCompletando, setEjercicioCompletando] = useState<any>(null);
+  const [seriesData, setSeriesData] = useState<{reps: string, peso: string}[]>([]);
+
+  const [agregarSeries, setAgregarSeries] = useState('');
+  const [agregarReps, setAgregarReps] = useState('');
+
+  const [mostrarFinalizar, setMostrarFinalizar] = useState(false);
+  const [resumenFinalizar, setResumenFinalizar] = useState<any>(null);
+
   const [mostrarTimer, setMostrarTimer] = useState(false);
   const [timerSegundos, setTimerSegundos] = useState(60);
   const [timerInicial, setTimerInicial] = useState(60);
@@ -222,6 +234,49 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const cargar = async () => {
     const data = await obtenerRutinas();
     setRutina(data[rutinaIndex]);
+  };
+
+  // =======================
+  // FINALIZAR RUTINA
+  // =======================
+  const abrirFinalizar = () => {
+    if (!rutina) return;
+    const todos = [
+      ...(rutina.entradaEnCalor || []),
+      ...(rutina.ejercicios || [])
+    ];
+    const completados = todos.filter(e => e.completado);
+
+    const ejerciciosDetalle = completados
+      .filter(e => e.tipo === 'ejercicio' || !e.tipo || e.tipo !== 'entrada')
+      .map(e => {
+        const seriesD: {reps: string, peso: string}[] = e.seriesData || [];
+        const pesoEjercicio = seriesD.reduce((acc, s) => {
+          const r = parseFloat(s.reps) || 0;
+          const p = parseFloat(s.peso) || 0;
+          return acc + r * p;
+        }, 0);
+        return { nombre: e.nombre, seriesData: seriesD, pesoEjercicio };
+      });
+
+    const pesoTotal = ejerciciosDetalle.reduce((acc, e) => acc + e.pesoEjercicio, 0);
+
+    setResumenFinalizar({
+      rutinaNombre: rutina.nombre,
+      fecha: new Date().toISOString(),
+      ejerciciosCompletados: completados.length,
+      ejerciciosTotal: todos.length,
+      pesoTotalKg: pesoTotal,
+      ejercicios: ejerciciosDetalle
+    });
+    setMostrarFinalizar(true);
+  };
+
+  const confirmarFinalizar = async () => {
+    if (!resumenFinalizar) return;
+    await guardarHistorial(resumenFinalizar);
+    setMostrarFinalizar(false);
+    router.back();
   };
 
   // =======================
@@ -278,8 +333,8 @@ await agregarEjercicio(
     grupo: ejercicioSeleccionado.grupo,
     dificultad: ejercicioSeleccionado.dificultad,
     equipo: ejercicioSeleccionado.equipo,
-    series: ejercicioSeleccionado.series.toString(),
-    reps: ejercicioSeleccionado.reps.toString(),
+    series: agregarSeries || ejercicioSeleccionado.series.toString(),
+    reps: agregarReps || ejercicioSeleccionado.reps.toString(),
     completado: false
   },
   ejercicioSeleccionado.tipo // 👈 IMPORTANTE
@@ -287,6 +342,8 @@ await agregarEjercicio(
 
   setEjercicioSeleccionado(null);
   setVarianteSeleccionada(null);
+  setAgregarSeries('');
+  setAgregarReps('');
   setMostrarSelector(false);
 
   cargar();
@@ -507,12 +564,18 @@ await agregarEjercicio(
             }}>
 
               <TouchableOpacity onPress={async () => {
-                if (item.tipo === 'entrada') {
-                  await toggleEjercicio(rutinaIndex, item.originalIndex, 'entradaEnCalor');
+                if (item.completado) {
+                  // ya completado → desmarcar
+                  const tipoStorage = item.tipo === 'entrada' ? 'entradaEnCalor' : 'ejercicios';
+                  await toggleEjercicio(rutinaIndex, item.originalIndex, tipoStorage);
+                  cargar();
                 } else {
-                  await toggleEjercicio(rutinaIndex, item.originalIndex, 'ejercicios');
+                  // abrir modal para confirmar series/reps
+                  setEjercicioCompletando(item);
+                  const n = parseInt(String(item.series ?? '1')) || 1;
+                  setSeriesData(Array.from({ length: n }, () => ({ reps: String(item.reps ?? ''), peso: '' })));
+                  setMostrarCompletar(true);
                 }
-                cargar();
               }}>
                 <Text style={{
                   fontSize: 18,
@@ -536,6 +599,16 @@ await agregarEjercicio(
                 }}>
                   {item.equipo ? formatearEquipo(item.equipo) : ''}
                 </Text>
+
+                {item.completado && item.seriesData && item.seriesData.length > 0 && (
+                  <View style={{ marginTop: 6, gap: 2 }}>
+                    {item.seriesData.map((s: {reps: string, peso: string}, i: number) => (
+                      <Text key={i} style={{ fontSize: 12, color: theme.success }}>
+                        S{i + 1}: {s.reps ? `${s.reps} reps` :  '—'} × {s.peso || 0}kg
+                      </Text>
+                    ))}
+                  </View>
+                )}
               </TouchableOpacity>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -585,6 +658,19 @@ await agregarEjercicio(
               <Text style={{ color: theme.onPrimary  }}>
                 {mostrarSelector ? 'Cerrar' : 'Agregar ejercicio'}
               </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={abrirFinalizar}
+              style={{
+                backgroundColor: theme.success || '#4caf50',
+                padding: 12,
+                borderRadius: 10,
+                marginTop: 10,
+                alignItems: 'center'
+              }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700' }}>Finalizar rutina</Text>
             </TouchableOpacity>
       </View>
       {/* BOTÓN FLOTANTE TEMPORIZADOR */}
@@ -692,6 +778,196 @@ await agregarEjercicio(
         </Pressable>
       </Modal>
 
+      {/* MODAL FINALIZAR RUTINA */}
+      <Modal visible={mostrarFinalizar} transparent animationType="fade">
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => setMostrarFinalizar(false)}
+        >
+          <Pressable onPress={() => {}} style={{
+            backgroundColor: theme.card,
+            borderRadius: 20,
+            padding: 24,
+            width: '90%',
+            maxHeight: '80%',
+            borderWidth: 1,
+            borderColor: theme.border
+          }}>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: theme.text, marginBottom: 2 }}>
+              Sesión completada
+            </Text>
+            <Text style={{ fontSize: 13, color: theme.muted, marginBottom: 16 }}>
+              {resumenFinalizar ? new Date(resumenFinalizar.fecha).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
+            </Text>
+
+            {/* STATS GLOBALES */}
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+              <View style={{ flex: 1, backgroundColor: theme.background, borderRadius: 12, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}>
+                <Text style={{ fontSize: 22, fontWeight: '800', color: theme.primary }}>
+                  {resumenFinalizar?.ejerciciosCompletados ?? 0}
+                  <Text style={{ fontSize: 13, color: theme.muted }}>/{resumenFinalizar?.ejerciciosTotal ?? 0}</Text>
+                </Text>
+                <Text style={{ fontSize: 11, color: theme.muted, marginTop: 2 }}>Ejercicios</Text>
+              </View>
+              <View style={{ flex: 1, backgroundColor: theme.background, borderRadius: 12, padding: 12, alignItems: 'center', borderWidth: 1, borderColor: theme.border }}>
+                <Text style={{ fontSize: 22, fontWeight: '800', color: theme.primary }}>
+                  {resumenFinalizar?.pesoTotalKg ? resumenFinalizar.pesoTotalKg.toLocaleString('es-AR') : '0'}
+                </Text>
+                <Text style={{ fontSize: 11, color: theme.muted, marginTop: 2 }}>kg totales</Text>
+              </View>
+            </View>
+
+            {/* DETALLE POR EJERCICIO */}
+            {resumenFinalizar?.ejercicios?.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: theme.muted, marginBottom: 8 }}>DETALLE</Text>
+                {resumenFinalizar.ejercicios.map((e: any, i: number) => (
+                  <View key={i} style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    paddingVertical: 6,
+                    borderBottomWidth: i < resumenFinalizar.ejercicios.length - 1 ? 1 : 0,
+                    borderBottomColor: theme.border
+                  }}>
+                    <Text style={{ color: theme.text, fontSize: 14, fontWeight: '600', flex: 1 }}>{e.nombre}</Text>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={{ color: theme.text, fontSize: 13 }}>
+                        {e.seriesData?.length ?? 0} series
+                      </Text>
+                      {e.pesoEjercicio > 0 && (
+                        <Text style={{ color: theme.muted, fontSize: 12 }}>
+                          {e.pesoEjercicio.toLocaleString('es-AR')} kg
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <TouchableOpacity
+              onPress={confirmarFinalizar}
+              style={{ backgroundColor: theme.success || '#4caf50', padding: 14, borderRadius: 12, alignItems: 'center' }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Guardar en historial</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setMostrarFinalizar(false)}
+              style={{ marginTop: 12, alignItems: 'center' }}
+            >
+              <Text style={{ color: theme.muted }}>Cancelar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* MODAL COMPLETAR EJERCICIO */}
+      <Modal visible={mostrarCompletar} transparent animationType="fade">
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => setMostrarCompletar(false)}
+        >
+          <Pressable onPress={() => {}} style={{
+            backgroundColor: theme.card,
+            borderRadius: 20,
+            padding: 24,
+            width: '90%',
+            maxHeight: '80%',
+            borderWidth: 1,
+            borderColor: theme.border
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, marginBottom: 2 }}>
+              {ejercicioCompletando?.nombre}
+            </Text>
+            <Text style={{ fontSize: 13, color: theme.muted, marginBottom: 16 }}>
+              Registra reps y peso por serie
+            </Text>
+
+            {/* CABECERA */}
+            <View style={{ flexDirection: 'row', marginBottom: 8, paddingHorizontal: 4 }}>
+              <Text style={{ width: 48, color: theme.muted, fontSize: 12, fontWeight: '600' }}>Serie</Text>
+              <Text style={{ flex: 1, color: theme.muted, fontSize: 12, fontWeight: '600', textAlign: 'center' }}>Reps</Text>
+              <View style={{ width: 20 }} />
+              <Text style={{ flex: 1, color: theme.muted, fontSize: 12, fontWeight: '600', textAlign: 'center' }}>Peso (kg)</Text>
+            </View>
+
+            {/* FILAS POR SERIE */}
+            {seriesData.map((s, i) => (
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8 }}>
+                <View style={{
+                  width: 40, height: 40, borderRadius: 20,
+                  backgroundColor: theme.background,
+                  borderWidth: 1, borderColor: theme.border,
+                  justifyContent: 'center', alignItems: 'center'
+                }}>
+                  <Text style={{ color: theme.muted, fontSize: 13, fontWeight: '700' }}>{i + 1}</Text>
+                </View>
+                <TextInput
+                  value={s.reps}
+                  onChangeText={v => setSeriesData(prev => prev.map((x, j) => j === i ? { ...x, reps: v } : x))}
+                  keyboardType="numeric"
+                  placeholder="—"
+                  placeholderTextColor={theme.muted}
+                  style={{
+                    flex: 1,
+                    backgroundColor: theme.background,
+                    padding: 10,
+                    borderRadius: 10,
+                    color: theme.text,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    fontSize: 18,
+                    textAlign: 'center',
+                    fontWeight: '700'
+                  }}
+                />
+                <Text style={{ color: theme.muted, fontSize: 16 }}>×</Text>
+                <TextInput
+                  value={s.peso}
+                  onChangeText={v => setSeriesData(prev => prev.map((x, j) => j === i ? { ...x, peso: v } : x))}
+                  keyboardType="decimal-pad"
+                  placeholder="—"
+                  placeholderTextColor={theme.muted}
+                  style={{
+                    flex: 1,
+                    backgroundColor: theme.background,
+                    padding: 10,
+                    borderRadius: 10,
+                    color: theme.text,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    fontSize: 18,
+                    textAlign: 'center',
+                    fontWeight: '700'
+                  }}
+                />
+              </View>
+            ))}
+
+            <TouchableOpacity
+              onPress={async () => {
+                if (!ejercicioCompletando) return;
+                const tipoStorage = ejercicioCompletando.tipo === 'entrada' ? 'entradaEnCalor' : 'ejercicios';
+                await completarEjercicio(rutinaIndex, ejercicioCompletando.originalIndex, tipoStorage, seriesData);
+                setMostrarCompletar(false);
+                setEjercicioCompletando(null);
+                cargar();
+              }}
+              style={{ backgroundColor: theme.success || '#4caf50', padding: 14, borderRadius: 12, alignItems: 'center', marginTop: 6 }}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Completado ✓</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setMostrarCompletar(false)}
+              style={{ marginTop: 12, alignItems: 'center' }}
+            >
+              <Text style={{ color: theme.muted }}>Cancelar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
               <Modal visible={mostrarSelector}  animationType="slide"  transparent={true}
 >
 <Pressable
@@ -793,6 +1069,8 @@ style={{
             onPress={() => {
               setEjercicioSeleccionado(item);
               setVarianteSeleccionada(null);
+              setAgregarSeries(String(item.series ?? ''));
+              setAgregarReps(String(item.reps ?? ''));
             }}
             style={{
               padding: 12,
@@ -820,10 +1098,10 @@ style={{
         )}
       />
 
-      {/* VARIANTES */}
+      {/* VARIANTES + SERIES/REPS */}
       {ejercicioSeleccionado && (
-        <View style={{ marginTop: 10 , padding: 10, borderWidth : 5 , borderColor: theme.card, borderRadius: 10}}>
-          <Text style={{ marginBottom: 5 }}>Variantes:</Text>
+        <View style={{ marginTop: 10, padding: 10, borderWidth: 5, borderColor: theme.card, borderRadius: 10 }}>
+          <Text style={{ marginBottom: 5, color: theme.text }}>Variantes:</Text>
 
           {ejercicioSeleccionado.variantes.map((v, i) => (
             <TouchableOpacity
@@ -840,6 +1118,55 @@ style={{
               <Text style={{ color: theme?.text || '#000' }}>{v}</Text>
             </TouchableOpacity>
           ))}
+
+          {/* INPUTS SERIES / REPS */}
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: theme.muted, fontSize: 12, marginBottom: 4 }}>Series</Text>
+              <TextInput
+                value={agregarSeries}
+                onChangeText={setAgregarSeries}
+                keyboardType="numeric"
+                placeholder="—"
+                placeholderTextColor={theme.muted}
+                style={{
+                  backgroundColor: theme.background,
+                  padding: 10,
+                  borderRadius: 10,
+                  color: theme.text,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  fontSize: 18,
+                  textAlign: 'center',
+                  fontWeight: '700'
+                }}
+              />
+            </View>
+            <View style={{ justifyContent: 'flex-end', paddingBottom: 10 }}>
+              <Text style={{ color: theme.muted, fontSize: 18 }}>×</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: theme.muted, fontSize: 12, marginBottom: 4 }}>Reps</Text>
+              <TextInput
+                value={agregarReps}
+                onChangeText={setAgregarReps}
+                keyboardType="numeric"
+                placeholder="—"
+                placeholderTextColor={theme.muted}
+                style={{
+                  backgroundColor: theme.background,
+                  padding: 10,
+                  borderRadius: 10,
+                  color: theme.text,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  fontSize: 18,
+                  textAlign: 'center',
+                  fontWeight: '700'
+                }}
+              />
+            </View>
+          </View>
         </View>
       )}
 

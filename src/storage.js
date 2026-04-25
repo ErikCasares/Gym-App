@@ -117,6 +117,51 @@ export const toggleEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejerc
 };
 
 // =======================
+// COMPLETAR EJERCICIO (guarda series y reps reales)
+// =======================
+// seriesData: [{ reps: string, peso: string }, ...]
+export const completarEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejercicios', seriesData) => {
+  const data = await AsyncStorage.getItem(KEY);
+  const rutinas = data ? JSON.parse(data) : [];
+
+  const lista = rutinas[rutinaIndex]?.[tipo];
+  if (!lista || !lista[ejercicioIndex]) return;
+
+  lista[ejercicioIndex].completado = true;
+  lista[ejercicioIndex].seriesData = seriesData;
+
+  await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
+};
+
+// =======================
+// HISTORIAL
+// =======================
+const HISTORIAL_KEY = 'historial';
+
+export const guardarHistorial = async (entrada) => {
+  const data = await AsyncStorage.getItem(HISTORIAL_KEY);
+  const historial = data ? JSON.parse(data) : [];
+  historial.unshift(entrada); // más reciente primero
+  await AsyncStorage.setItem(HISTORIAL_KEY, JSON.stringify(historial));
+};
+
+export const obtenerHistorial = async () => {
+  try {
+    const data = await AsyncStorage.getItem(HISTORIAL_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const eliminarEntradaHistorial = async (index) => {
+  const data = await AsyncStorage.getItem(HISTORIAL_KEY);
+  const historial = data ? JSON.parse(data) : [];
+  historial.splice(index, 1);
+  await AsyncStorage.setItem(HISTORIAL_KEY, JSON.stringify(historial));
+};
+
+// =======================
 // ELIMINAR EJERCICIO
 // =======================
 export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejercicios') => {
