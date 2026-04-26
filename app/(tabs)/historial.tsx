@@ -70,8 +70,10 @@ export default function Historial() {
               {/* CABECERA */}
               <View style={{ padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text }}>{item.rutinaNombre}</Text>
-                  <Text style={{ fontSize: 12, color: theme.muted, marginTop: 2 }}>{formatFecha(item.fecha)}</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text }}>
+                    {item.rutinaNombre}
+                    <Text style={{ fontSize: 12, fontWeight: '400', color: theme.muted }}> · {formatFecha(item.fecha)}</Text>
+                  </Text>
                 </View>
                 <TouchableOpacity onPress={() => eliminar(index)} style={{ marginRight: 12 }}>
                   <Text style={{ color: theme.danger || '#ff4d4d', fontWeight: '700' }}>X</Text>

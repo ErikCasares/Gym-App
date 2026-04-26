@@ -830,16 +830,9 @@ await agregarEjercicio(
                     borderBottomColor: theme.border
                   }}>
                     <Text style={{ color: theme.text, fontSize: 14, fontWeight: '600', flex: 1 }}>{e.nombre}</Text>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ color: theme.text, fontSize: 13 }}>
-                        {e.seriesData?.length ?? 0} series
-                      </Text>
-                      {e.pesoEjercicio > 0 && (
-                        <Text style={{ color: theme.muted, fontSize: 12 }}>
-                          {e.pesoEjercicio.toLocaleString('es-AR')} kg
-                        </Text>
-                      )}
-                    </View>
+                    <Text style={{ color: theme.primary, fontSize: 14, fontWeight: '700' }}>
+                      {e.pesoEjercicio > 0 ? `${e.pesoEjercicio.toLocaleString('es-AR')} kg` : '— kg'}
+                    </Text>
                   </View>
                 ))}
               </View>
