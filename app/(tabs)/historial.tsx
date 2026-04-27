@@ -71,8 +71,7 @@ export default function Historial() {
               <View style={{ padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text }}>
-                    {item.rutinaNombre}
-                    <Text style={{ fontSize: 12, fontWeight: '400', color: theme.muted }}> · {formatFecha(item.fecha)}</Text>
+                    {item.rutinaNombre} · {formatFecha(item.fecha)}
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => eliminar(index)} style={{ marginRight: 12 }}>
