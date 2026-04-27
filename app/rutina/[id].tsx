@@ -34,7 +34,8 @@ import {
   eliminarEjercicio,
   renombrarRutina,
   guardarHistorial,
-  resetearRutina
+  resetearRutina,
+  obtenerHistorial
 } from '../../src/storage'; // funciones de storage
 
 import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
@@ -187,6 +188,8 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const [agregarSeries, setAgregarSeries] = useState('');
   const [agregarReps, setAgregarReps] = useState('');
 
+  const [historial, setHistorial] = useState<any[]>([]);
+
   const [mostrarFinalizar, setMostrarFinalizar] = useState(false);
   const [resumenFinalizar, setResumenFinalizar] = useState<any>(null);
 
@@ -235,6 +238,8 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const cargar = async () => {
     const data = await obtenerRutinas();
     setRutina(data[rutinaIndex]);
+    const hist = await obtenerHistorial();
+    setHistorial(hist);
   };
 
   // =======================
@@ -262,13 +267,18 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
 
     const pesoTotal = ejerciciosDetalle.reduce((acc, e) => acc + e.pesoEjercicio, 0);
 
+    const gruposMusculares = [...new Set(
+      completados.filter(e => e.grupo).map(e => e.grupo)
+    )];
+
     setResumenFinalizar({
       rutinaNombre: rutina.nombre,
       fecha: new Date().toISOString(),
       ejerciciosCompletados: completados.length,
       ejerciciosTotal: todos.length,
       pesoTotalKg: pesoTotal,
-      ejercicios: ejerciciosDetalle
+      ejercicios: ejerciciosDetalle,
+      gruposMusculares
     });
     setMostrarFinalizar(true);
   };
@@ -366,6 +376,52 @@ await agregarEjercicio(
   const progreso = total > 0 ? completados / total : 0;
 
   // =======================
+  // MINI GRAFICO DE CARGA HISTORICA
+  // =======================
+  const MiniChart = ({ nombre }: { nombre: string }) => {
+    const datos = historial
+      .filter(s => s.ejercicios?.some((e: any) => e.nombre === nombre))
+      .slice(0, 8)
+      .reverse()
+      .map((s: any) => {
+        const ej = s.ejercicios.find((e: any) => e.nombre === nombre);
+        return Math.max(0, ...(ej?.seriesData || []).map((sd: any) => parseFloat(sd.peso) || 0));
+      })
+      .filter(v => v > 0);
+
+    if (datos.length < 2) return null;
+
+    const max = Math.max(...datos);
+    const ALTO = 32;
+
+    return (
+      <View style={{ marginTop: 8 }}>
+        <Text style={{ fontSize: 10, color: theme.muted, marginBottom: 4 }}>
+          Carga máx. por sesión (kg)
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: ALTO }}>
+          {datos.map((v, i) => {
+            const esUltimo = i === datos.length - 1;
+            return (
+              <View key={i} style={{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', height: ALTO }}>
+                <View style={{
+                  width: '100%',
+                  height: Math.max(3, (v / max) * ALTO),
+                  backgroundColor: esUltimo ? (theme.primary || '#4caf50') : (theme.border || '#444'),
+                  borderRadius: 3
+                }} />
+                <Text style={{ fontSize: 9, color: esUltimo ? theme.primary : theme.muted, fontWeight: esUltimo ? '700' : '400', marginTop: 2 }}>
+                  {v}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    );
+  };
+
+  // =======================
   // UI (RENDER PRINCIPAL)
   // =======================
   return (<>
@@ -402,32 +458,6 @@ await agregarEjercicio(
           <Text style={{ color: theme.text, fontSize: 13, fontWeight: '600' }}>Renombrar</Text>
         </TouchableOpacity>
       </View>
-
-      {/* GRUPOS MUSCULARES */}
-      {(() => {
-        const grupos = [...new Set(
-          (rutina.ejercicios || [])
-            .map((e: any) => e.grupo)
-            .filter(Boolean)
-        )] as string[];
-        if (grupos.length === 0) return null;
-        return (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, gap: 6 }}>
-            {grupos.map((g: string) => (
-              <View key={g} style={{
-                backgroundColor: theme.card,
-                borderWidth: 1,
-                borderColor: theme.border,
-                borderRadius: 20,
-                paddingHorizontal: 10,
-                paddingVertical: 4
-              }}>
-                <Text style={{ fontSize: 12, color: theme.muted, fontWeight: '600' }}>{g}</Text>
-              </View>
-            ))}
-          </View>
-        );
-      })()}
 
       {/* MODAL DESCRIPCION */}
       <Modal visible={descripcionVisible} transparent animationType="fade">
@@ -637,6 +667,7 @@ await agregarEjercicio(
                     ))}
                   </View>
                 )}
+                {item.tipo === 'ejercicio' && <MiniChart nombre={item.nombre} />}
               </TouchableOpacity>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -863,6 +894,20 @@ await agregarEjercicio(
                     </Text>
                   </View>
                 ))}
+              </View>
+            )}
+
+            {/* GRUPOS MUSCULARES / ELONGACIÓN */}
+            {resumenFinalizar?.gruposMusculares?.length > 0 && (
+              <View style={{ marginBottom: 16, backgroundColor: theme.background, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: theme.border }}>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: theme.muted, marginBottom: 8 }}>ELONGAR HOY</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {resumenFinalizar.gruposMusculares.map((grupo: string, i: number) => (
+                    <View key={i} style={{ backgroundColor: theme.card, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: theme.border }}>
+                      <Text style={{ color: theme.text, fontSize: 13, fontWeight: '600' }}>{grupo}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             )}
 
