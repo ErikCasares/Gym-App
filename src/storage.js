@@ -162,6 +162,25 @@ export const eliminarEntradaHistorial = async (index) => {
 };
 
 // =======================
+// RESETEAR RUTINA (desmarca completados y borra seriesData)
+// =======================
+export const resetearRutina = async (rutinaIndex) => {
+  const data = await AsyncStorage.getItem(KEY);
+  const rutinas = data ? JSON.parse(data) : [];
+  const rutina = rutinas[rutinaIndex];
+  if (!rutina) return;
+
+  ['entradaEnCalor', 'ejercicios'].forEach(tipo => {
+    (rutina[tipo] || []).forEach(e => {
+      e.completado = false;
+      delete e.seriesData;
+    });
+  });
+
+  await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
+};
+
+// =======================
 // ELIMINAR EJERCICIO
 // =======================
 export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ejercicios') => {

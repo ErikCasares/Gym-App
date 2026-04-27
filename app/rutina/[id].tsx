@@ -33,7 +33,8 @@ import {
   completarEjercicio,
   eliminarEjercicio,
   renombrarRutina,
-  guardarHistorial
+  guardarHistorial,
+  resetearRutina
 } from '../../src/storage'; // funciones de storage
 
 import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
@@ -275,6 +276,7 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const confirmarFinalizar = async () => {
     if (!resumenFinalizar) return;
     await guardarHistorial(resumenFinalizar);
+    await resetearRutina(rutinaIndex);
     setMostrarFinalizar(false);
     router.back();
   };
@@ -400,6 +402,32 @@ await agregarEjercicio(
           <Text style={{ color: theme.text, fontSize: 13, fontWeight: '600' }}>Renombrar</Text>
         </TouchableOpacity>
       </View>
+
+      {/* GRUPOS MUSCULARES */}
+      {(() => {
+        const grupos = [...new Set(
+          (rutina.ejercicios || [])
+            .map((e: any) => e.grupo)
+            .filter(Boolean)
+        )] as string[];
+        if (grupos.length === 0) return null;
+        return (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10, gap: 6 }}>
+            {grupos.map((g: string) => (
+              <View key={g} style={{
+                backgroundColor: theme.card,
+                borderWidth: 1,
+                borderColor: theme.border,
+                borderRadius: 20,
+                paddingHorizontal: 10,
+                paddingVertical: 4
+              }}>
+                <Text style={{ fontSize: 12, color: theme.muted, fontWeight: '600' }}>{g}</Text>
+              </View>
+            ))}
+          </View>
+        );
+      })()}
 
       {/* MODAL DESCRIPCION */}
       <Modal visible={descripcionVisible} transparent animationType="fade">
