@@ -1,0 +1,207 @@
+   {
+
+      "semana": 1,
+
+      "dias": [
+
+        {
+
+          "dia": 1,
+
+          "ejercicios": [
+
+            {
+
+              "nombre": "Sentadillas",
+
+              "series": [
+
+                { "reps": "3x6", "intensidad": 75 },
+
+                { "reps": "2x4", "intensidad": 85 }
+
+              ]
+
+            },
+
+            {
+
+              "nombre": "Cuádriceps en máquina",
+
+              "series": [
+
+                { "reps": "4x10", "intensidad": "M.E" }
+
+              ]
+
+            },
+
+            {
+
+              "nombre": "Pecho plano",
+
+              "series": [
+
+                { "reps": "3x8", "intensidad": 75 },
+
+                { "reps": "2x6", "intensidad": 85 }
+
+              ]
+
+            }
+
+          ]
+
+        },
+
+        {
+
+          "dia": 2,
+
+          "ejercicios": [
+
+            {
+
+              "nombre": "Peso muerto",
+
+              "series": [
+
+                { "reps": "3x6", "intensidad": 75 },
+
+                { "reps": "2x4", "intensidad": 85 }
+
+              ]
+
+            },
+
+            {
+
+              "nombre": "Dominadas (pronas)",
+
+              "series": [
+
+                { "reps": "3x8", "intensidad": 75 },
+
+                { "reps": "2x6", "intensidad": 85 }
+
+              ]
+
+            },
+
+            {
+
+              "nombre": "Remo en máquina",
+
+              "series": [
+
+                { "reps": "4x10", "intensidad": "M.E" }
+
+              ]
+
+            }
+
+          ]
+
+        },
+
+        {
+
+          "dia": 3,
+
+          "ejercicios": [
+
+            {
+
+              "nombre": "Sentadillas frontales",
+
+              "series": [
+
+                { "reps": "3x6", "intensidad": 75 },
+
+                { "reps": "2x4", "intensidad": 85 }
+
+              ]
+
+            },
+
+            {
+
+              "nombre": "Cuadriceps isométrico",
+
+              "series": [
+
+                { "reps": "4x15s", "intensidad": "M.E" }
+
+              ]
+
+            },
+
+            {
+
+              "nombre": "Hombro con barra",
+
+              "series": [
+
+                { "reps": "3x6", "intensidad": 75 },
+
+                { "reps": "2x4", "intensidad": 85 }
+
+              ]
+
+            }
+
+          ]
+
+        },
+
+        {
+
+          "dia": 4,
+
+          "ejercicios": [
+
+            {
+
+              "nombre": "Elevaciones de cadera",
+
+              "series": [
+
+                { "reps": "3x10", "intensidad": 75 },
+
+                { "reps": "2x6", "intensidad": 85 }
+
+              ]
+
+            },
+
+            {
+
+              "nombre": "Peso muerto a 1 pierna",
+
+              "series": [
+
+                { "reps": "4x10/10", "intensidad": "M.E" }
+
+              ]
+
+            },
+
+            {
+
+              "nombre": "Pecho declinado",
+
+              "series": [
+
+                { "reps": "4x8", "intensidad": 75 }
+
+              ]
+
+            }
+
+          ]
+
+        }
+
+      ]
+
+    }

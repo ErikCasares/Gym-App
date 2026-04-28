@@ -27,6 +27,7 @@ export const usarPlantilla = async (rutinaBase) => {
 
   const nuevaRutina = {
     nombre: rutinaBase.nombre,
+    ...(rutinaBase.carpetaId ? { carpetaId: rutinaBase.carpetaId } : {}),
     entradaEnCalor: (rutinaBase.entradaEnCalor || []).map(e => ({
       ...e,
       completado: false
@@ -130,6 +131,44 @@ export const completarEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'ej
   lista[ejercicioIndex].completado = true;
   lista[ejercicioIndex].seriesData = seriesData;
 
+  await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
+};
+
+// =======================
+// CARPETAS
+// =======================
+const CARPETAS_KEY = 'carpetas';
+
+export const obtenerCarpetas = async () => {
+  try {
+    const data = await AsyncStorage.getItem(CARPETAS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+};
+
+export const crearCarpeta = async (nombre) => {
+  const carpetas = await obtenerCarpetas();
+  const nueva = { id: String(Date.now()), nombre };
+  carpetas.push(nueva);
+  await AsyncStorage.setItem(CARPETAS_KEY, JSON.stringify(carpetas));
+  return nueva;
+};
+
+export const eliminarCarpeta = async (id) => {
+  const carpetas = await obtenerCarpetas();
+  await AsyncStorage.setItem(CARPETAS_KEY, JSON.stringify(carpetas.filter(c => c.id !== id)));
+  const data = await AsyncStorage.getItem(KEY);
+  const rutinas = data ? JSON.parse(data) : [];
+  rutinas.forEach(r => { if (r.carpetaId === id) delete r.carpetaId; });
+  await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
+};
+
+export const asignarCarpeta = async (rutinaIndex, carpetaId) => {
+  const data = await AsyncStorage.getItem(KEY);
+  const rutinas = data ? JSON.parse(data) : [];
+  if (!rutinas[rutinaIndex]) return;
+  if (carpetaId) rutinas[rutinaIndex].carpetaId = carpetaId;
+  else delete rutinas[rutinaIndex].carpetaId;
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
 
