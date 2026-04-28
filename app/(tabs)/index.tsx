@@ -46,11 +46,7 @@ export default function Home() {
     const [data, caps] = await Promise.all([obtenerRutinas(), obtenerCarpetas()]);
     setRutinas(data);
     setCarpetas(caps);
-    setExpandidas(prev => {
-      const nuevo = new Set(prev);
-      caps.forEach((c: any) => nuevo.add(c.id));
-      return nuevo;
-    });
+    setExpandidas(prev => prev);
   };
 
   useFocusEffect(useCallback(() => { cargarDatos(); }, []));

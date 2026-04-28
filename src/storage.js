@@ -94,6 +94,9 @@ export const agregarEjercicio = async (rutinaIndex, nuevo, tipo = 'ejercicios') 
 
   if (tipo === 'entrada') {
     rutina.entradaEnCalor.unshift(nuevo);
+  } else if (tipo === 'finalizacion') {
+    if (!rutina.finalizacion) rutina.finalizacion = [];
+    rutina.finalizacion.push(nuevo);
   } else {
     rutina.ejercicios.push(nuevo);
   }
@@ -209,13 +212,24 @@ export const resetearRutina = async (rutinaIndex) => {
   const rutina = rutinas[rutinaIndex];
   if (!rutina) return;
 
-  ['entradaEnCalor', 'ejercicios'].forEach(tipo => {
+  ['entradaEnCalor', 'ejercicios', 'finalizacion'].forEach(tipo => {
     (rutina[tipo] || []).forEach(e => {
       e.completado = false;
       delete e.seriesData;
     });
   });
 
+  await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
+};
+
+// =======================
+// NOTAS DE RUTINA
+// =======================
+export const guardarNotas = async (rutinaIndex, notas) => {
+  const data = await AsyncStorage.getItem(KEY);
+  const rutinas = data ? JSON.parse(data) : [];
+  if (!rutinas[rutinaIndex]) return;
+  rutinas[rutinaIndex].notas = notas;
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
 

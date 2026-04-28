@@ -35,7 +35,8 @@ import {
   renombrarRutina,
   guardarHistorial,
   resetearRutina,
-  obtenerHistorial
+  obtenerHistorial,
+  guardarNotas
 } from '../../src/storage'; // funciones de storage
 
 import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
@@ -94,6 +95,7 @@ const panResponder = useRef(
   const { id } = useLocalSearchParams(); // id de la rutina
 
   const [mostrarSelector, setMostrarSelector] = useState(false); // mostrar/ocultar selector
+  const [seccionDestino, setSeccionDestino] = useState<'ejercicios' | 'finalizacion'>('ejercicios');
   const [rutina, setRutina] = useState<any>(null); // rutina actual
   const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState(null);
   const formatearEquipo = (equipo) => {
@@ -178,6 +180,9 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const [mostrarRenombrar, setMostrarRenombrar] = useState(false);
   const [nuevoNombre, setNuevoNombre] = useState('');
 
+  const [mostrarNotas, setMostrarNotas] = useState(false);
+  const [notasTexto, setNotasTexto] = useState('');
+
   const [descripcionVisible, setDescripcionVisible] = useState(false);
   const [ejercicioDescripcion, setEjercicioDescripcion] = useState<any>(null);
 
@@ -238,6 +243,7 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const cargar = async () => {
     const data = await obtenerRutinas();
     setRutina(data[rutinaIndex]);
+    setNotasTexto(data[rutinaIndex]?.notas || '');
     const hist = await obtenerHistorial();
     setHistorial(hist);
   };
@@ -249,7 +255,8 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
     if (!rutina) return;
     const todos = [
       ...(rutina.entradaEnCalor || []),
-      ...(rutina.ejercicios || [])
+      ...(rutina.ejercicios || []),
+      ...(rutina.finalizacion || [])
     ];
     const completados = todos.filter(e => e.completado);
 
@@ -349,7 +356,7 @@ await agregarEjercicio(
     reps: agregarReps || ejercicioSeleccionado.reps.toString(),
     completado: false
   },
-  ejercicioSeleccionado.tipo // 👈 IMPORTANTE
+  ejercicioSeleccionado.tipo === 'entrada' ? 'entrada' : seccionDestino
 );
 
   setEjercicioSeleccionado(null);
@@ -366,11 +373,12 @@ await agregarEjercicio(
   // =======================
   if (!rutina) return null;
 
-  const total = (rutina.entradaEnCalor?.length || 0) + (rutina.ejercicios?.length || 0);
+  const total = (rutina.entradaEnCalor?.length || 0) + (rutina.ejercicios?.length || 0) + (rutina.finalizacion?.length || 0);
 
   const completados = [
     ...(rutina.entradaEnCalor || []),
-    ...(rutina.ejercicios || [])
+    ...(rutina.ejercicios || []),
+    ...(rutina.finalizacion || [])
   ].filter(e => e.completado).length;
 
   const progreso = total > 0 ? completados / total : 0;
@@ -439,10 +447,23 @@ await agregarEjercicio(
         paddingTop: 70 }}>
       
       {/* TITULO */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Text style={{ fontSize: 24, fontWeight: 'bold', color: theme.text, flex: 1 }}>
           {rutina.nombre}
         </Text>
+        <TouchableOpacity
+          onPress={() => setMostrarNotas(true)}
+          style={{
+            backgroundColor: theme.card,
+            borderWidth: 1,
+            borderColor: rutina.notas ? theme.primary : theme.border,
+            borderRadius: 8,
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+          }}
+        >
+          <Text style={{ fontSize: 16 }}>{rutina.notas ? '📝' : '🗒️'}</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => { setNuevoNombre(rutina.nombre); setMostrarRenombrar(true); }}
           style={{
@@ -458,6 +479,62 @@ await agregarEjercicio(
           <Text style={{ color: theme.text, fontSize: 13, fontWeight: '600' }}>Renombrar</Text>
         </TouchableOpacity>
       </View>
+
+      {/* MODAL NOTAS */}
+      <Modal visible={mostrarNotas} transparent animationType="fade">
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}
+          onPress={() => setMostrarNotas(false)}
+        >
+          <Pressable onPress={() => {}} style={{
+            backgroundColor: theme.card,
+            borderRadius: 20,
+            padding: 24,
+            width: '90%',
+            borderWidth: 1,
+            borderColor: theme.border
+          }}>
+            <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, marginBottom: 16 }}>
+              Notas
+            </Text>
+            <TextInput
+              value={notasTexto}
+              onChangeText={setNotasTexto}
+              placeholder="Anotá lo que quieras sobre esta rutina..."
+              placeholderTextColor={theme.muted}
+              multiline
+              numberOfLines={6}
+              style={{
+                backgroundColor: theme.background,
+                padding: 12,
+                borderRadius: 12,
+                color: theme.text,
+                borderWidth: 1,
+                borderColor: theme.border,
+                marginBottom: 16,
+                minHeight: 120,
+                textAlignVertical: 'top'
+              }}
+            />
+            <TouchableOpacity
+              onPress={async () => {
+                await guardarNotas(rutinaIndex, notasTexto);
+                setMostrarNotas(false);
+                cargar();
+              }}
+              style={{ backgroundColor: theme.primary, padding: 14, borderRadius: 12, alignItems: 'center' }}
+            >
+              <Text style={{ color: theme.onPrimary, fontWeight: '600' }}>Guardar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setMostrarNotas(false)}
+              style={{ marginTop: 12, alignItems: 'center' }}
+            >
+              <Text style={{ color: theme.muted }}>Cancelar</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* MODAL DESCRIPCION */}
       <Modal visible={descripcionVisible} transparent animationType="fade">
@@ -591,7 +668,9 @@ await agregarEjercicio(
           { tipo: 'titulo', label: '🔥 Entrada en calor' },
           ...(rutina.entradaEnCalor || []).map((e, i) => ({ ...e, tipo: 'entrada', originalIndex: i })),
           { tipo: 'titulo', label: '💪 Ejercicios' },
-          ...(rutina.ejercicios || []).map((e, i) => ({ ...e, tipo: 'ejercicio', originalIndex: i }))
+          ...(rutina.ejercicios || []).map((e, i) => ({ ...e, tipo: 'ejercicio', originalIndex: i })),
+          { tipo: 'titulo', label: '🧘 Vuelta a la calma' },
+          ...(rutina.finalizacion || []).map((e: any, i: number) => ({ ...e, tipo: 'finalizacion', originalIndex: i })),
         ]}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item, index }) => {
@@ -624,7 +703,7 @@ await agregarEjercicio(
               <TouchableOpacity onPress={async () => {
                 if (item.completado) {
                   // ya completado → desmarcar
-                  const tipoStorage = item.tipo === 'entrada' ? 'entradaEnCalor' : 'ejercicios';
+                  const tipoStorage = item.tipo === 'entrada' ? 'entradaEnCalor' : item.tipo === 'finalizacion' ? 'finalizacion' : 'ejercicios';
                   await toggleEjercicio(rutinaIndex, item.originalIndex, tipoStorage);
                   cargar();
                 } else {
@@ -683,11 +762,8 @@ await agregarEjercicio(
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity onPress={async () => {
-                  if (item.tipo === 'entrada') {
-                    await eliminarEjercicio(rutinaIndex, item.originalIndex, 'entradaEnCalor');
-                  } else {
-                    await eliminarEjercicio(rutinaIndex, item.originalIndex, 'ejercicios');
-                  }
+                  const tipoEliminar = item.tipo === 'entrada' ? 'entradaEnCalor' : item.tipo === 'finalizacion' ? 'finalizacion' : 'ejercicios';
+                  await eliminarEjercicio(rutinaIndex, item.originalIndex, tipoEliminar);
                   cargar();
                 }}>
                   <Text style={{ color: theme?.danger || 'red' }}>X</Text>
@@ -1013,7 +1089,7 @@ await agregarEjercicio(
             <TouchableOpacity
               onPress={async () => {
                 if (!ejercicioCompletando) return;
-                const tipoStorage = ejercicioCompletando.tipo === 'entrada' ? 'entradaEnCalor' : 'ejercicios';
+                const tipoStorage = ejercicioCompletando.tipo === 'entrada' ? 'entradaEnCalor' : ejercicioCompletando.tipo === 'finalizacion' ? 'finalizacion' : 'ejercicios';
                 await completarEjercicio(rutinaIndex, ejercicioCompletando.originalIndex, tipoStorage, seriesData);
                 setMostrarCompletar(false);
                 setEjercicioCompletando(null);
@@ -1105,6 +1181,29 @@ style={{
         <TouchableOpacity onPress={() => setMostrarSelector(false)}>
           <Text style={{ fontSize: 18 }}>✖</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* SELECTOR DE SECCIÓN */}
+      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+        {(['ejercicios', 'finalizacion'] as const).map(s => (
+          <TouchableOpacity
+            key={s}
+            onPress={() => setSeccionDestino(s)}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 10,
+              alignItems: 'center',
+              backgroundColor: seccionDestino === s ? theme.primary : theme.background,
+              borderWidth: 1,
+              borderColor: seccionDestino === s ? theme.primary : theme.border
+            }}
+          >
+            <Text style={{ color: seccionDestino === s ? theme.onPrimary : theme.muted, fontWeight: '600', fontSize: 13 }}>
+              {s === 'ejercicios' ? '💪 Ejercicios' : '🧘 Vuelta a la calma'}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* BUSCADOR */}
