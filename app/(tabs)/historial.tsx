@@ -97,6 +97,16 @@ export default function Historial() {
                 </View>
               </View>
 
+              {/* NOTAS */}
+              {abierto && item.notas ? (
+                <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: theme.muted, marginBottom: 6 }}>NOTAS</Text>
+                  <Text style={{ fontSize: 13, color: theme.text, fontStyle: 'italic' }}>
+                    {item.notas}
+                  </Text>
+                </View>
+              ) : null}
+
               {/* DETALLE EXPANDIBLE */}
               {abierto && item.ejercicios?.length > 0 && (
                 <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>

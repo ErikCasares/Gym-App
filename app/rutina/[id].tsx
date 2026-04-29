@@ -95,9 +95,9 @@ const panResponder = useRef(
   const { id } = useLocalSearchParams(); // id de la rutina
 
   const [mostrarSelector, setMostrarSelector] = useState(false); // mostrar/ocultar selector
-  const [seccionDestino, setSeccionDestino] = useState<'ejercicios' | 'finalizacion'>('ejercicios');
+  const [seccionDestino, setSeccionDestino] = useState<'entrada' | 'ejercicios' | 'finalizacion'>('ejercicios');
   const [rutina, setRutina] = useState<any>(null); // rutina actual
-  const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState(null);
+  const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState<any>(null);
   const formatearEquipo = (equipo) => {
     if (!equipo || equipo.length === 0) return '';
 
@@ -115,12 +115,12 @@ const panResponder = useRef(
 
   const grupos = ['Todos', ...new Set(EJERCICIOS.map(e => e.grupo))];
 
+const tipoFiltro = seccionDestino === 'entrada' ? 'entrada' : seccionDestino === 'finalizacion' ? 'calma' : 'ejercicio';
+
 const ejerciciosFiltrados = EJERCICIOS.filter(e => {
   const coincideBusqueda = e.nombre.toLowerCase().includes(busqueda.toLowerCase());
-  const coincideGrupo =
-    grupoSeleccionado === 'Todos' || e.grupo === grupoSeleccionado;
-
-  return coincideBusqueda && coincideGrupo && e.tipo === 'ejercicio';
+  const coincideGrupo = grupoSeleccionado === 'Todos' || e.grupo === grupoSeleccionado;
+  return coincideBusqueda && coincideGrupo && e.tipo === tipoFiltro;
 });
 
   // =======================
@@ -281,6 +281,7 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
     setResumenFinalizar({
       rutinaNombre: rutina.nombre,
       fecha: new Date().toISOString(),
+      notas: rutina.notas || '',
       ejerciciosCompletados: completados.length,
       ejerciciosTotal: todos.length,
       pesoTotalKg: pesoTotal,
@@ -339,6 +340,36 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
     }
 }, [mostrarSelector]);
   // =======================
+  // AUTO-ELONGACION
+  // =======================
+  const autoAgregarElongacion = async () => {
+    const grupos = [...new Set((rutina.ejercicios || []).map((e: any) => e.grupo).filter(Boolean))];
+    if (grupos.length === 0) return;
+
+    const candidatos = EJERCICIOS.filter(e => e.tipo === 'calma' && grupos.includes(e.grupo));
+    const yaAgregados = new Set((rutina.finalizacion || []).map((e: any) => e.nombre));
+
+    for (const est of candidatos) {
+      if (!yaAgregados.has(est.nombre)) {
+        await agregarEjercicio(
+          rutinaIndex,
+          {
+            nombre: est.nombre,
+            variante: est.variantes[0],
+            grupo: est.grupo,
+            descripcion: est.descripcion,
+            series: String(est.series),
+            reps: String(est.reps),
+            completado: false
+          },
+          'finalizacion'
+        );
+      }
+    }
+    cargar();
+  };
+
+  // =======================
   // LOGICA PARA AGREGAR EJERCICIO
   // =======================
 const agregar = async () => {
@@ -352,11 +383,12 @@ await agregarEjercicio(
     grupo: ejercicioSeleccionado.grupo,
     dificultad: ejercicioSeleccionado.dificultad,
     equipo: ejercicioSeleccionado.equipo,
+    descripcion: ejercicioSeleccionado.descripcion,
     series: agregarSeries || ejercicioSeleccionado.series.toString(),
     reps: agregarReps || ejercicioSeleccionado.reps.toString(),
     completado: false
   },
-  ejercicioSeleccionado.tipo === 'entrada' ? 'entrada' : seccionDestino
+  seccionDestino
 );
 
   setEjercicioSeleccionado(null);
@@ -669,21 +701,35 @@ await agregarEjercicio(
           ...(rutina.entradaEnCalor || []).map((e, i) => ({ ...e, tipo: 'entrada', originalIndex: i })),
           { tipo: 'titulo', label: '💪 Ejercicios' },
           ...(rutina.ejercicios || []).map((e, i) => ({ ...e, tipo: 'ejercicio', originalIndex: i })),
-          { tipo: 'titulo', label: '🧘 Vuelta a la calma' },
+          { tipo: 'titulo', label: '🧘 Vuelta a la calma', autoElongar: true },
           ...(rutina.finalizacion || []).map((e: any, i: number) => ({ ...e, tipo: 'finalizacion', originalIndex: i })),
         ]}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item, index }) => {
           if (item.tipo === 'titulo') {
             return (
-              <Text style={{
-                marginTop: 15,
-                fontSize: 16,
-                fontWeight: '700',
-                color: theme.text
-              }}>
-                {item.label}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 15 }}>
+                <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text, flex: 1 }}>
+                  {item.label}
+                </Text>
+                {item.autoElongar && (
+                  <TouchableOpacity
+                    onPress={autoAgregarElongacion}
+                    style={{
+                      backgroundColor: theme.card,
+                      borderWidth: 1,
+                      borderColor: theme.primary,
+                      borderRadius: 8,
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: theme.primary, fontWeight: '700' }}>
+                      + Sugerir
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             );
           }
 
@@ -931,9 +977,15 @@ await agregarEjercicio(
             <Text style={{ fontSize: 20, fontWeight: '800', color: theme.text, marginBottom: 2 }}>
               Sesión completada
             </Text>
-            <Text style={{ fontSize: 13, color: theme.muted, marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, color: theme.muted, marginBottom: resumenFinalizar?.notas ? 10 : 16 }}>
               {resumenFinalizar ? new Date(resumenFinalizar.fecha).toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
             </Text>
+
+            {resumenFinalizar?.notas ? (
+              <Text style={{ fontSize: 13, color: theme.text, fontStyle: 'italic', marginBottom: 16, paddingHorizontal: 4 }}>
+                📝 {resumenFinalizar.notas}
+              </Text>
+            ) : null}
 
             {/* STATS GLOBALES */}
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
@@ -1184,23 +1236,27 @@ style={{
       </View>
 
       {/* SELECTOR DE SECCIÓN */}
-      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
-        {(['ejercicios', 'finalizacion'] as const).map(s => (
+      <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+        {([
+          { key: 'entrada', label: '🔥 Entrada' },
+          { key: 'ejercicios', label: '💪 Ejercicios' },
+          { key: 'finalizacion', label: '🧘 Calma' },
+        ] as const).map(s => (
           <TouchableOpacity
-            key={s}
-            onPress={() => setSeccionDestino(s)}
+            key={s.key}
+            onPress={() => setSeccionDestino(s.key)}
             style={{
               flex: 1,
               paddingVertical: 8,
               borderRadius: 10,
               alignItems: 'center',
-              backgroundColor: seccionDestino === s ? theme.primary : theme.background,
+              backgroundColor: seccionDestino === s.key ? theme.primary : theme.background,
               borderWidth: 1,
-              borderColor: seccionDestino === s ? theme.primary : theme.border
+              borderColor: seccionDestino === s.key ? theme.primary : theme.border
             }}
           >
-            <Text style={{ color: seccionDestino === s ? theme.onPrimary : theme.muted, fontWeight: '600', fontSize: 13 }}>
-              {s === 'ejercicios' ? '💪 Ejercicios' : '🧘 Vuelta a la calma'}
+            <Text style={{ color: seccionDestino === s.key ? theme.onPrimary : theme.muted, fontWeight: '600', fontSize: 12 }}>
+              {s.label}
             </Text>
           </TouchableOpacity>
         ))}
