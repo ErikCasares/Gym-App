@@ -248,3 +248,21 @@ export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'eje
 
   await AsyncStorage.setItem(KEY, JSON.stringify(rutinas));
 };
+
+const CALENDAR_KEY = 'entrenamientos';
+
+export const marcarDiaEntrenado = async () => {
+  const hoy = new Date().toISOString().split('T')[0];
+
+  const data = await AsyncStorage.getItem(CALENDAR_KEY);
+  const dias = data ? JSON.parse(data) : {};
+
+  dias[hoy] = true;
+
+  await AsyncStorage.setItem(CALENDAR_KEY, JSON.stringify(dias));
+};
+
+export const obtenerDiasEntrenados = async () => {
+  const data = await AsyncStorage.getItem(CALENDAR_KEY);
+  return data ? JSON.parse(data) : {};
+};

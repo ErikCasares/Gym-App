@@ -36,7 +36,8 @@ import {
   guardarHistorial,
   resetearRutina,
   obtenerHistorial,
-  guardarNotas
+  guardarNotas,
+  marcarDiaEntrenado
 } from '../../src/storage'; // funciones de storage
 
 import { EJERCICIOS } from '../../src/ejercicios'; // lista base de ejercicios
@@ -293,7 +294,14 @@ const ejerciciosFiltrados = EJERCICIOS.filter(e => {
 
   const confirmarFinalizar = async () => {
     if (!resumenFinalizar) return;
+    // guardar en historial
     await guardarHistorial(resumenFinalizar);
+
+    // guardar en calendario
+    const fecha = new Date().toISOString().split('T')[0];
+    await marcarDiaEntrenado(fecha, resumenFinalizar);
+
+    // resetear rutina
     await resetearRutina(rutinaIndex);
     setMostrarFinalizar(false);
     router.back();

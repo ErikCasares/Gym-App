@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useTheme } from '../../src/theme/ThemeContext';
 import ThemedText from '../../src/components/ThemedText';
 import Button from '../../src/components/Button';
+import { marcarDiaEntrenado, obtenerDiasEntrenados, obtenerEntrenamientoPorFecha } from '../../src/storage';
 
 export default function Perfil() {
   const theme = useTheme();
@@ -19,6 +20,9 @@ export default function Perfil() {
   const [mostrarObjetivos, setMostrarObjetivos] = useState(false);
   const [objetivo, setObjetivo] = useState('');
   const [mostrarEditar, setMostrarEditar] = useState(false);
+
+  const [diasEntrenados, setDiasEntrenados] = useState({});
+  const [entrenamientos, setEntrenamientos] = useState({});
 
   const OBJETIVOS = [
     'Ganar masa muscular',
@@ -46,7 +50,30 @@ export default function Perfil() {
     };
 
     cargarPerfil();
+    (async () => {
+      const dias = await obtenerDiasEntrenados();
+      setDiasEntrenados(dias);
+
+      const data = {};
+      for (const fecha in dias) {
+        if (dias[fecha]) {
+          const entrenamiento = await obtenerEntrenamientoPorFecha(fecha);
+          data[fecha] = entrenamiento;
+        }
+      }
+      setEntrenamientos(data);
+    })();
   }, []);
+  const generarDiasMes = () => {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = hoy.getMonth();
+    const total = new Date(año, mes + 1, 0).getDate();
+
+    return { año, mes, dias: Array.from({ length: total }, (_, i) => i + 1) };
+  };
+
+  const { año, mes, dias } = generarDiasMes();
 
   return (
     <View style={{
@@ -324,6 +351,46 @@ export default function Perfil() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <View style={{ marginTop: 30 }}>
+        <ThemedText style={{ fontSize: 20, fontWeight: '700', marginBottom: 10 }}>
+          Calendario
+        </ThemedText>
+
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+          {dias.map((dia) => {
+            const fecha = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+            const entrenado = diasEntrenados[fecha];
+
+            return (
+              <TouchableOpacity
+                key={dia}
+                onPress={() => {
+                  if (entrenamientos[fecha]) {
+                    console.log('Entrenamiento del día:', entrenamientos[fecha]);
+                    // acá después podés navegar a una pantalla detalle
+                  }
+                }}
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 21,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  margin: 4,
+                  backgroundColor: entrenado ? theme.success : theme.card,
+                  borderWidth: 1,
+                  borderColor: theme.border
+                }}
+              >
+                <ThemedText style={{ color: entrenado ? '#fff' : theme.text }}>
+                  {dia}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
 
     </View>
   );
