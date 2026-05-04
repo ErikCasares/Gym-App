@@ -79,7 +79,6 @@ export default function Crear() {
           </Pressable>
         </Pressable>
       </Modal>
-
     </ThemedView>
   );
 }
