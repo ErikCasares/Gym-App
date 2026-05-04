@@ -266,3 +266,18 @@ export const obtenerDiasEntrenados = async () => {
   const data = await AsyncStorage.getItem(CALENDAR_KEY);
   return data ? JSON.parse(data) : {};
 };
+
+export const obtenerEntrenamientoPorFecha = async (fecha) => {
+  try {
+    const data = await AsyncStorage.getItem('historial');
+    const historial = data ? JSON.parse(data) : [];
+
+    return historial.find((h) => {
+      if (!h?.fecha) return false;
+      return new Date(h.fecha).toISOString().slice(0, 10) === fecha;
+    });
+  } catch (e) {
+    console.log('Error obteniendo entrenamiento por fecha', e);
+    return null;
+  }
+};
