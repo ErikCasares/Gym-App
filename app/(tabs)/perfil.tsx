@@ -29,6 +29,11 @@ export default function Perfil() {
   const [fechaSeleccionada, setFechaSeleccionada] = useState<string | null>(null);
   const [detalleNota, setDetalleNota] = useState<any>(null);
 
+  // historial modal
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
+  const [historialList, setHistorialList] = useState<any[]>([]);
+  const [vista, setVista] = useState<'calendario' | 'historial'>('calendario');
+
   const [diasEntrenados, setDiasEntrenados] = useState({});
   const [entrenamientos, setEntrenamientos] = useState({});
 
@@ -178,6 +183,27 @@ export default function Perfil() {
       setDetalleNota(null);
     }
 
+    setMostrarDetalleFecha(true);
+  };
+
+  const abrirHistorial = async () => {
+    try {
+      const h = await obtenerHistorial();
+      setHistorialList(Array.isArray(h) ? h : []);
+      setVista('historial');
+    } catch (e) {
+      console.warn('Error cargando historial', e);
+      setHistorialList([]);
+      setVista('historial');
+    }
+  };
+
+  const abrirDesdeHistorial = (entry: any) => {
+    if (!entry?.fecha) return;
+    const key = new Date(entry.fecha).toISOString().slice(0, 10);
+    setFechaSeleccionada(key);
+    setDetalleNota(entry);
+    setMostrarHistorial(false);
     setMostrarDetalleFecha(true);
   };
 
@@ -460,67 +486,121 @@ export default function Perfil() {
 
       <View style={{ marginTop: 30 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <ThemedText style={{ fontSize: 20, fontWeight: '700' }}>Calendario</ThemedText>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <TouchableOpacity onPress={prevMonth} style={{ padding: 8 }}>
-              <ThemedText style={{ color: theme.muted }}>{'‹'}</ThemedText>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <TouchableOpacity onPress={() => setVista('calendario')}>
+              <ThemedText style={{
+                fontSize: 18,
+                fontWeight: '700',
+                color: vista === 'calendario' ? theme.primary : theme.muted
+              }}>
+                Calendario
+              </ThemedText>
             </TouchableOpacity>
-            <ThemedText style={{ fontSize: 16, fontWeight: '600', marginHorizontal: 6 }}>
-              {new Date(año, mes, 1).toLocaleString('es-AR', { month: 'long', year: 'numeric' })}
-            </ThemedText>
-            <TouchableOpacity onPress={nextMonth} style={{ padding: 8 }}>
-              <ThemedText style={{ color: theme.muted }}>{'›'}</ThemedText>
+
+            <TouchableOpacity onPress={abrirHistorial}>
+              <ThemedText style={{
+                fontSize: 18,
+                fontWeight: '700',
+                color: vista === 'historial' ? theme.primary : theme.muted
+              }}>
+                Historial
+              </ThemedText>
             </TouchableOpacity>
           </View>
+
+          {vista === 'calendario' && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TouchableOpacity onPress={prevMonth} style={{ padding: 8 }}>
+                <ThemedText style={{ color: theme.muted }}>{'‹'}</ThemedText>
+              </TouchableOpacity>
+              <ThemedText style={{ fontSize: 16, fontWeight: '600', marginHorizontal: 6 }}>
+                {new Date(año, mes, 1).toLocaleString('es-AR', { month: 'long', year: 'numeric' })}
+              </ThemedText>
+              <TouchableOpacity onPress={nextMonth} style={{ padding: 8 }}>
+                <ThemedText style={{ color: theme.muted }}>{'›'}</ThemedText>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          {dias.map((dia) => {
-            const fecha = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-            const entrenado = !!diasEntrenados[fecha];
+        {vista === 'calendario' && (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+            {dias.map((dia) => {
+              const fecha = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+              const entrenado = !!diasEntrenados[fecha];
 
-            return (
+              return (
+                <TouchableOpacity
+                  key={dia}
+                  onPress={() => abrirDetalle(fecha)}
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 21,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    margin: 4,
+                    backgroundColor: entrenado ? theme.success : theme.card,
+                    borderWidth: 1,
+                    borderColor: theme.border
+                  }}
+                >
+                  <ThemedText style={{ color: entrenado ? '#fff' : theme.text }}>
+                    {dia}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        {vista === 'historial' && (
+          <View>
+            <ThemedText style={{ fontSize: 18, fontWeight: '700', marginBottom: 8 }}>
+              Historial de entrenamientos
+            </ThemedText>
+            {historialList.length === 0 ? (
+              <ThemedText style={{ color: theme.muted }}>No hay registros</ThemedText>
+            ) : (
+              <FlatList
+                data={historialList}
+                keyExtractor={(item, i) => (item.id ?? i).toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    onPress={() => abrirDesdeHistorial(item)}
+                    style={{
+                      paddingVertical: 12,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.border
+                    }}
+                  >
+                    <ThemedText style={{ fontWeight: '600' }}>
+                      {item.rutinaNombre || 'Entrenamiento'} · {formatFecha(item.fecha)}
+                    </ThemedText>
+                    <Text style={{ color: theme.muted, marginTop: 4 }}>
+                      {item.ejercicios?.length ?? 0} ejercicios · {item.pesoTotalKg ? `${item.pesoTotalKg} kg` : '0 kg'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            <View style={{ marginTop: 12 }}>
               <TouchableOpacity
-                key={dia}
-                onPress={() => abrirDetalle(fecha)}
+                onPress={() => setVista('calendario')}
                 style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  margin: 4,
-                  backgroundColor: entrenado ? theme.success : theme.card,
+                  backgroundColor: theme.background,
+                  padding: 12,
+                  borderRadius: 10,
                   borderWidth: 1,
-                  borderColor: theme.border
+                  borderColor: theme.border,
+                  alignItems: 'center'
                 }}
               >
-                <ThemedText style={{ color: entrenado ? '#fff' : theme.text }}>
-                  {dia}
-                </ThemedText>
+                <ThemedText style={{ color: theme.text }}>Cerrar</ThemedText>
               </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Botón para abrir Historial */}
-        <View style={{ marginTop: 12 }}>
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/historial')}
-            style={{
-              backgroundColor: theme.card,
-              padding: 12,
-              borderRadius: 10,
-              borderWidth: 1,
-              borderColor: theme.border,
-              alignItems: 'center',
-            }}
-          >
-            <ThemedText style={{ color: theme.primary, fontWeight: '700' }}>
-              Historial
-            </ThemedText>
-          </TouchableOpacity>
-        </View>
+            </View>
+          </View>
+        )}
       </View>
 
       {/* Modal detalle día */}

@@ -22,7 +22,7 @@ export default function Inicio() {
         </Text>
 
         <TouchableOpacity
-          onPress={() => router.push('/(tabs)/index')}
+          onPress={() => router.push('/(tabs)/')}
           style={[styles.primaryButton, { backgroundColor: theme.primary }]}
         >
           <Text style={{ color: theme.onPrimary, fontWeight: '700' }}>Mis rutinas</Text>
