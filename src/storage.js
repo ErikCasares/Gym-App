@@ -251,13 +251,20 @@ export const eliminarEjercicio = async (rutinaIndex, ejercicioIndex, tipo = 'eje
 
 const CALENDAR_KEY = 'entrenamientos';
 
-export const marcarDiaEntrenado = async () => {
-  const hoy = new Date().toISOString().split('T')[0];
+export const marcarDiaEntrenado = async (fecha = null, marcado = true) => {
+  // fecha puede ser 'YYYY-MM-DD' o un objeto Date; si no se pasa, usa hoy
+  const dia = fecha
+    ? (typeof fecha === 'string' ? fecha : new Date(fecha).toISOString().slice(0, 10))
+    : new Date().toISOString().split('T')[0];
 
   const data = await AsyncStorage.getItem(CALENDAR_KEY);
   const dias = data ? JSON.parse(data) : {};
 
-  dias[hoy] = true;
+  if (marcado) {
+    dias[dia] = true;
+  } else {
+    delete dias[dia];
+  }
 
   await AsyncStorage.setItem(CALENDAR_KEY, JSON.stringify(dias));
 };
@@ -269,7 +276,7 @@ export const obtenerDiasEntrenados = async () => {
 
 export const obtenerEntrenamientoPorFecha = async (fecha) => {
   try {
-    const data = await AsyncStorage.getItem('historial');
+    const data = await AsyncStorage.getItem(HISTORIAL_KEY);
     const historial = data ? JSON.parse(data) : [];
 
     return historial.find((h) => {
