@@ -42,14 +42,16 @@ export default function Home() {
   // =======================
   // CARGA
   // =======================
-  const cargarDatos = async () => {
+  // envolver cargarDatos para estabilidad
+  const cargarDatos = useCallback(async () => {
     const [data, caps] = await Promise.all([obtenerRutinas(), obtenerCarpetas()]);
     setRutinas(data);
     setCarpetas(caps);
     setExpandidas(prev => prev);
-  };
+  }, []);
 
-  useFocusEffect(useCallback(() => { cargarDatos(); }, []));
+  // usar useFocusEffect con la función estable
+  useFocusEffect(useCallback(() => { cargarDatos(); }, [cargarDatos]));
 
   const toggleExpandida = (id: string) => {
     setExpandidas(prev => {
@@ -116,8 +118,10 @@ export default function Home() {
   const importarDesdeArchivo = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({ type: 'application/json', copyToCacheDirectory: true });
-      if (result.canceled) return;
-      const datos = JSON.parse(await fetch(result.assets[0].uri).then(r => r.text()));
+      // nuevo manejo según API: result.type === 'success' y uri en result.uri
+      if (result.type !== 'success' || !result.uri) return;
+      const texto = await fetch(result.uri).then(r => r.text());
+      const datos = JSON.parse(texto);
 
       if (datos.semana !== undefined && Array.isArray(datos.dias)) {
         Alert.alert(
@@ -144,7 +148,8 @@ export default function Home() {
       }
 
       Alert.alert('Archivo inválido', 'Formato no reconocido.');
-    } catch {
+    } catch (err) {
+      console.warn('Error importando archivo:', err);
       Alert.alert('Error', 'No se pudo leer el archivo.');
     }
   };

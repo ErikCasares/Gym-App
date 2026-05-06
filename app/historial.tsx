@@ -1,8 +1,8 @@
 import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { useEffect, useState, useCallback } from 'react';
 import { useFocusEffect } from 'expo-router';
-import { obtenerHistorial, eliminarEntradaHistorial } from '../../src/storage';
-import { useTheme } from '../../src/theme/ThemeContext';
+import { obtenerHistorial, eliminarEntradaHistorial } from '../src/storage';
+import { useTheme } from '../src/theme/ThemeContext';
 
 const formatFecha = (iso: string) => {
   const d = new Date(iso);

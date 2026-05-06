@@ -22,17 +22,17 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="index"
+        name="inicio"
         options={{
-          title: 'Rutinas',
+          title: 'Inicio',
           tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text>,
         }}
       />
       <Tabs.Screen
-        name="historial"
+        name="index"
         options={{
-          title: 'Historial',
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>📋</Text>,
+          title: 'Rutinas',
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏋️</Text>,
         }}
       />
       <Tabs.Screen

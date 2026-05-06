@@ -9,9 +9,11 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import ThemedText from '../../src/components/ThemedText';
 import Button from '../../src/components/Button';
 import { marcarDiaEntrenado, obtenerDiasEntrenados, obtenerEntrenamientoPorFecha } from '../../src/storage';
+import { useRouter } from 'expo-router';
 
 export default function Perfil() {
   const theme = useTheme();
+  const router = useRouter();
 
   const STORAGE_KEY = 'perfil_usuario';
   const OBJETIVO_KEY = 'objetivo_usuario';
@@ -499,6 +501,25 @@ export default function Perfil() {
               </TouchableOpacity>
             );
           })}
+        </View>
+
+        {/* Botón para abrir Historial */}
+        <View style={{ marginTop: 12 }}>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/historial')}
+            style={{
+              backgroundColor: theme.card,
+              padding: 12,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: theme.border,
+              alignItems: 'center',
+            }}
+          >
+            <ThemedText style={{ color: theme.primary, fontWeight: '700' }}>
+              Historial
+            </ThemedText>
+          </TouchableOpacity>
         </View>
       </View>
 
