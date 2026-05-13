@@ -32,7 +32,7 @@ export default function TabLayout() {
         name="rutinas"
         options={{
           title: 'Rutinas',
-          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏋️</Text>,
+          tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏋️</Text>, 
         }}
       />
       <Tabs.Screen
