@@ -21,7 +21,7 @@ export default function Home() {
 
   const [visible, setVisible] = useState(false);
   const [nombre, setNombre] = useState('');
-  const [modoModal, setModoModal] = useState<'rutina' | 'prearmada' | 'carpeta'>('rutina');
+  const [modoModal, setModoModal] = useState<'rutina' | 'prearmada' | 'carpeta' | 'menu'>('rutina');
 
   const [modalMoverVisible, setModalMoverVisible] = useState(false);
   const [rutinaAMover, setRutinaAMover] = useState<number | null>(null);
@@ -289,7 +289,7 @@ export default function Home() {
           onPress={() => setModalMoverVisible(false)}
         >
           <Pressable onPress={() => {}} style={{
-            backgroundColor: theme.card, borderRadius: 20,
+            backgroundColor: theme.card, borderRadius: 12,
             padding: 24, width: '85%', borderWidth: 1, borderColor: theme.border
           }}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: theme.text, marginBottom: 16 }}>
@@ -324,47 +324,14 @@ export default function Home() {
 
       {/* BOTONES FLOTANTES */}
       <TouchableOpacity
-        onPress={() => { setModoModal('carpeta'); setNombre(''); translateY.setValue(0); setVisible(true); }}
-        style={{
-          position: 'absolute', bottom: 30, left: 30,
-          backgroundColor: theme.card, width: 60, height: 60, borderRadius: 30,
-          justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: theme.border
-        }}
-      >
-        <Text style={{ fontSize: 22 }}>📁</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={importarDesdeArchivo}
-        style={{
-          position: 'absolute', bottom: 30, right: 170,
-          backgroundColor: theme.card, width: 60, height: 60, borderRadius: 30,
-          justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: theme.border
-        }}
-      >
-        <Text style={{ fontSize: 22 }}>📂</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => { setModoModal('prearmada'); setNombre(''); translateY.setValue(0); setVisible(true); }}
-        style={{
-          position: 'absolute', bottom: 30, right: 100,
-          backgroundColor: theme.card, width: 60, height: 60, borderRadius: 30,
-          justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: theme.border
-        }}
-      >
-        <Text style={{ color: theme.text, fontSize: 22, fontWeight: '600' }}>★</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => { setModoModal('rutina'); setNombre(''); translateY.setValue(0); setVisible(true); }}
+        onPress={() => { setModoModal('menu'); setNombre(''); translateY.setValue(0); setVisible(true); }}
         style={{
           position: 'absolute', bottom: 30, right: 30,
-          backgroundColor: theme.primary, width: 60, height: 60, borderRadius: 30,
+          backgroundColor: theme.primary, width: 64, height: 64, borderRadius: 32,
           justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: theme.border
         }}
       >
-        <Text style={{ color: '#fff', fontSize: 30, fontWeight: '300' }}>+</Text>
+        <Text style={{ color: '#fff', fontSize: 34, fontWeight: '300' }}>+</Text>
       </TouchableOpacity>
 
       {/* BOTTOM SHEET */}
@@ -378,7 +345,9 @@ export default function Home() {
               {...panResponder.panHandlers}
               style={{
                 backgroundColor: theme.card,
-                borderTopLeftRadius: 20, borderTopRightRadius: 20,
+                borderTopLeftRadius: 12, borderTopRightRadius: 12,
+                borderRadius: 12,
+                overflow: 'hidden',
                 padding: 20, maxHeight: '80%',
                 transform: [{ translateY }]
               }}
@@ -394,8 +363,36 @@ export default function Home() {
               />
 
               <Text style={{ fontSize: 20, fontWeight: '700', marginBottom: 15, color: theme.text }}>
-                {modoModal === 'prearmada' ? 'Rutinas prearmadas' : modoModal === 'carpeta' ? 'Nueva carpeta' : 'Nueva rutina'}
+                {modoModal === 'menu' ? 'Crear nueva' : modoModal === 'prearmada' ? 'Rutinas prearmadas' : modoModal === 'carpeta' ? 'Nueva carpeta' : 'Nueva rutina'}
               </Text>
+
+              {modoModal === 'menu' && (
+                <>
+                  <TouchableOpacity
+                    onPress={() => { setModoModal('rutina'); setNombre(''); }}
+                    style={{ padding: 16, borderRadius: 12, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, marginBottom: 10 }}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text }}>Crear rutina en blanco</Text>
+                    <Text style={{ fontSize: 12, color: theme.muted, marginTop: 6 }}>Comenzar con una rutina vacía</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => { setModoModal('prearmada'); }}
+                    style={{ padding: 16, borderRadius: 12, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, marginBottom: 10 }}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text }}>Elegir rutina prearmada</Text>
+                    <Text style={{ fontSize: 12, color: theme.muted, marginTop: 6 }}>Seleccionar de plantillas</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={async () => { setVisible(false); await importarDesdeArchivo(); cargarDatos(); }}
+                    style={{ padding: 16, borderRadius: 12, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, marginBottom: 100  }}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text }}>Cargar desde archivo</Text>
+                    <Text style={{ fontSize: 12, color: theme.muted, marginTop: 6 }}>Importar JSON</Text>
+                  </TouchableOpacity>
+                </>
+              )}
 
               {modoModal === 'prearmada' && (
                 <FlatList
@@ -432,7 +429,7 @@ export default function Home() {
                   />
                   <TouchableOpacity
                     onPress={modoModal === 'carpeta' ? nuevaCarpeta : crearRutina}
-                    style={{ backgroundColor: theme.primary, padding: 14, borderRadius: 12, alignItems: 'center' }}
+                    style={{ backgroundColor: theme.primary, padding: 14, borderRadius: 12, alignItems: 'center', marginBottom: 50 }}
                   >
                     <Text style={{ color: theme.onPrimary, fontWeight: '600' }}>Guardar</Text>
                   </TouchableOpacity>
