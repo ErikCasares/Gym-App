@@ -1,8 +1,9 @@
-import { View, TextInput, Modal, TouchableOpacity, Pressable, FlatList, Text } from 'react-native';
-import { useState } from 'react';
+import { View, TextInput, Modal, TouchableOpacity, Pressable, FlatList, Text, PanResponder } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState } from 'react';
 import { useEffect } from 'react';
 import { useCallback } from 'react';
+import { useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { obtenerHistorial } from '../../src/storage';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -60,6 +61,20 @@ export default function Perfil() {
       return m + 1;
     });
   };
+
+  // Swipe horizontal para cambiar mes
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 20 && Math.abs(g.dy) < 30,
+      onPanResponderRelease: (_, g) => {
+        if (g.dx < -50) {
+          nextMonth();
+        } else if (g.dx > 50) {
+          prevMonth();
+        }
+      }
+    })
+  ).current;
 
   // Sincronizar calendario desde historial: marca días y añade detalles
   const syncDesdeHistorial = async () => {
@@ -137,7 +152,44 @@ export default function Perfil() {
     return { año: añoParam, mes: mesParam, dias: Array.from({ length: total }, (_, i) => i + 1) };
   };
 
+  const formatMesMMM_AAAA = (añoParam: number, mesParam: number) => {
+    const d = new Date(añoParam, mesParam, 1);
+    let m = d.toLocaleString('es-AR', { month: 'short' });
+    m = m.replace('.', ''); // quitar posible punto en abreviatura (ej. "may.")
+    m = m.charAt(0).toUpperCase() + m.slice(1);
+    return `${m}-${d.getFullYear()}`;
+  };
+  
   const { año, mes, dias } = generarDiasMes(currentYear, currentMonth);
+
+  // Generar matriz de semanas (lunes primero). Cada semana es un array de 7 elementos (número de día o null).
+  const generarSemanas = (añoParam: number, mesParam: number) => {
+    const firstDay = new Date(añoParam, mesParam, 1);
+    // getDay(): 0=Dom,1=Lun,... convertir a índice con Lunes=0
+    const startIndex = (firstDay.getDay() + 6) % 7;
+    const total = new Date(añoParam, mesParam + 1, 0).getDate();
+    const semanas: (number | null)[][] = [];
+    let dia = 1;
+
+    // primera semana
+    const primeraSemana = Array(7).fill(null) as (number | null)[];
+    for (let i = startIndex; i < 7 && dia <= total; i++) {
+      primeraSemana[i] = dia++;
+    }
+    semanas.push(primeraSemana);
+
+    // semanas completas siguientes
+    while (dia <= total) {
+      const semana = Array(7).fill(null) as (number | null)[];
+      for (let i = 0; i < 7 && dia <= total; i++) {
+        semana[i] = dia++;
+      }
+      semanas.push(semana);
+    }
+
+    return semanas;
+  };
+  const semanas = generarSemanas(currentYear, currentMonth);
 
   const toggleDia = async (fecha: string) => {
     // alternar marca en storage y refrescar estados locales
@@ -514,7 +566,7 @@ export default function Perfil() {
                 <ThemedText style={{ color: theme.muted }}>{'‹'}</ThemedText>
               </TouchableOpacity>
               <ThemedText style={{ fontSize: 16, fontWeight: '600', marginHorizontal: 6 }}>
-                {new Date(año, mes, 1).toLocaleString('es-AR', { month: 'long', year: 'numeric' })}
+                {formatMesMMM_AAAA(año, mes)}
               </ThemedText>
               <TouchableOpacity onPress={nextMonth} style={{ padding: 8 }}>
                 <ThemedText style={{ color: theme.muted }}>{'›'}</ThemedText>
@@ -524,34 +576,47 @@ export default function Perfil() {
         </View>
 
         {vista === 'calendario' && (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-            {dias.map((dia) => {
-              const fecha = `${año}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-              const entrenado = !!diasEntrenados[fecha];
-
-              return (
-                <TouchableOpacity
-                  key={dia}
-                  onPress={() => abrirDetalle(fecha)}
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 21,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    margin: 4,
-                    backgroundColor: entrenado ? theme.success : theme.card,
-                    borderWidth: 1,
-                    borderColor: theme.border
-                  }}
-                >
-                  <ThemedText style={{ color: entrenado ? '#fff' : theme.text }}>
-                    {dia}
-                  </ThemedText>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <View {...panResponder.panHandlers}>
+             {/* Encabezado de días (Lun..Dom) */}
+             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+               {['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d => (
+                 <ThemedText key={d} style={{ width: 42, textAlign: 'center', color: theme.muted }}>{d}</ThemedText>
+               ))}
+             </View>
+ 
+             {/* Semanas */}
+             {semanas.map((semana, idx) => (
+               <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                 {semana.map((d, i) => {
+                   if (!d) {
+                     return <View key={i} style={{ width: 42, height: 42 }} />;
+                   }
+                   const fecha = `${año}-${String(mes + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                   const entrenado = !!diasEntrenados[fecha];
+                   return (
+                     <TouchableOpacity
+                       key={i}
+                       onPress={() => abrirDetalle(fecha)}
+                       style={{
+                         width: 42,
+                         height: 42,
+                         borderRadius: 21,
+                         justifyContent: 'center',
+                         alignItems: 'center',
+                         backgroundColor: entrenado ? theme.success : theme.card,
+                         borderWidth: 1,
+                         borderColor: theme.border
+                       }}
+                     >
+                       <ThemedText style={{ color: entrenado ? '#fff' : theme.text }}>
+                         {d}
+                       </ThemedText>
+                     </TouchableOpacity>
+                   );
+                 })}
+               </View>
+             ))}
+           </View>
         )}
 
         {vista === 'historial' && (
